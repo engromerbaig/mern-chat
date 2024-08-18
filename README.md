@@ -16,44 +16,50 @@ Welcome to the Real-Time Chat App! This project leverages the MERN stack along w
 
 ## Setup
 To get started, configure your environment variables by creating a \`.env\` file in the root directory of the project:
-\`\`\`env
+
+```js
 PORT=...
 MONGO_DB_URI=...
 JWT_SECRET=...
 NODE_ENV=...
-\`\`\`
+```
 
 ## Scripts
 ### Run Frontend
 To start the frontend development server:
-\`\`\`shell
+
+```shell
 npm run frontend
-\`\`\`
+```
 
 ### Run Backend
 To start the backend development server:
-\`\`\`
+
+```shell
 npm run backend
-\`\`\`
+```
 
 ### Run Combined Servers
 To build and start both frontend and backend servers:
-\`\`\`shell
+
+```shell
 npm run build
 npm start
-\`\`\`
+```
 
 ## Build the App
 To build the app for production:
-\`\`\`shell
+
+```shell
 npm run build
-\`\`\`
+```
 
 ## Start the App
 To start the app after building:
-\`\`\`shell
+
+```shell
 npm start
-\`\`\`
+```
 
 ## Note
 The application currently supports real-time messaging via Socket.io. Future updates will include a Superadmin Dashboard for user role management and file upload functionality using Multer.
