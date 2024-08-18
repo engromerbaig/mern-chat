@@ -1,6 +1,6 @@
 // admin.routes.js
 import express from 'express';
-import { approveRoleRequest, rejectRoleRequest, createSuperAdmin , getPendingRoleRequests } from '../controllers/admin.controller.js';
+import { approveRoleRequest, rejectRoleRequest, createSuperAdmin , getPendingRoleRequests  } from '../controllers/admin.controller.js';
 import { isSuperAdmin } from '../middleware/isSuperAdmin.js';
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.post('/approve-role', isSuperAdmin, approveRoleRequest);
 router.post('/reject-role', isSuperAdmin, rejectRoleRequest);
 
 // created route for pending requests
-router.post('/pending-requests', isSuperAdmin, getPendingRoleRequests);
+router.get('/pending-requests', isSuperAdmin, getPendingRoleRequests);
 
 
 export default router;
