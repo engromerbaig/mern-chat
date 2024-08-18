@@ -2,9 +2,12 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
 
+import { useNavigate } from "react-router-dom";
+
 const useLogin = () => {
     const [loading, setLoading] = useState(false);
     const { setAuthUser } = useAuthContext();
+    const navigate = useNavigate(); // Get navigate function from react-router-dom
 
     const login = async (username, password) => {
         const success = handleInputErrors(username, password);
@@ -22,17 +25,19 @@ const useLogin = () => {
                 throw new Error(data.error);
             }
 
-            // Capture the current date and time
             const loginTime = new Date().toISOString();
-
-            // Add login time to user data
             const userData = { ...data, loginTime };
 
-            // Store user data in localStorage
             localStorage.setItem("chat-user", JSON.stringify(userData));
-
-            // Update the authentication context
             setAuthUser(userData);
+
+            // Redirect based on role
+            if (userData.role === "Super Admin") {
+                navigate("/admin-dashboard");
+            } else {
+                navigate("/");
+            }
+
         } catch (error) {
             toast.error(error.message);
         } finally {
