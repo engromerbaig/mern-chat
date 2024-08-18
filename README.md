@@ -32,7 +32,7 @@ npm run frontend
 
 ### Run Backend
 To start the backend development server:
-\`\`\`shell
+\`\`\`
 npm run backend
 \`\`\`
 
