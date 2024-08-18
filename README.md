@@ -11,7 +11,7 @@ Welcome to the Real-Time Chat App! This project leverages the MERN stack along w
 - **Online User Status**: Managed with Socket.io and React Context
 - **Global State Management**: Zustand
 - **Error Handling**: Comprehensive error handling on both server and client sides
-- 
+  
 - **Upcoming Features**:
   - Superadmin Dashboard for user role initialization upon signup
   - File upload functionality using Multer
