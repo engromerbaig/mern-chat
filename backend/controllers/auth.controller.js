@@ -96,6 +96,8 @@ export const login = async (req, res) => {
 			_id: user._id,
 			fullName: user.fullName,
 			username: user.username,
+			role: user.role, // Ensure this line includes the role
+
 			profilePic: user.profilePic,
 		});
 	} catch (error) {

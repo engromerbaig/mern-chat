@@ -26,7 +26,7 @@ const useLogin = () => {
             }
 
             const loginTime = new Date().toISOString();
-            const userData = { ...data, loginTime };
+            const userData = { ...data, role: data.role, loginTime };
 
             localStorage.setItem("chat-user", JSON.stringify(userData));
             setAuthUser(userData);
