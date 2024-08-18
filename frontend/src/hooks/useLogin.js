@@ -31,12 +31,12 @@ const useLogin = () => {
             localStorage.setItem("chat-user", JSON.stringify(userData));
             setAuthUser(userData);
 
-            // // Redirect based on role
-            // if (userData.role === "Super Admin") {
-            //     navigate("/admin-dashboard");
-            // } else {
-            //     navigate("/");
-            // }
+            // Redirect based on role
+            if (userData.role === "Super Admin") {
+                navigate("/admin-dashboard");
+            } else {
+                navigate("/");
+            }
 
         } catch (error) {
             toast.error(error.message);
