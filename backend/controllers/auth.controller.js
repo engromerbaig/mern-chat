@@ -19,7 +19,7 @@ export const signup = async (req, res) => {
 
     // Handle role validation
     const validRoles = [
-      "Manager", "Agent", "R&D Role", "R&D Admin", "FE Role",
+      "Manager", "Agent", "R&D Role", "R&D Admin Role", "FE Role",
       "Staff Access Control Role", "Closer Role", "Team Lead Role",
       "RNA Specialist Role", "CB Specialist Role", "Decline Specialist Role"
     ];
