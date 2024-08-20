@@ -3,6 +3,11 @@ import User from "../models/user.model.js";
 
 const protectRoute = async (req, res, next) => {
 	try {
+		// Skip authentication for this specific route
+		if (req.path === '/create-superadmin') {
+			return next();
+		}
+
 		const token = req.cookies.jwt;
 
 		if (!token) {
@@ -31,3 +36,4 @@ const protectRoute = async (req, res, next) => {
 };
 
 export default protectRoute;
+
