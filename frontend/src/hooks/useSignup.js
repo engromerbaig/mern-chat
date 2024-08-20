@@ -6,8 +6,8 @@ const useSignup = () => {
 	const [loading, setLoading] = useState(false);
 	const { setAuthUser } = useAuthContext();
 
-	const signup = async ({ fullName, username, password, confirmPassword, gender }) => {
-		const success = handleInputErrors({ fullName, username, password, confirmPassword, gender });
+	const signup = async ({ fullName, username, password, confirmPassword, gender, role }) => {
+		const success = handleInputErrors({ fullName, username, password, confirmPassword, gender, role });
 		if (!success) return;
 
 		setLoading(true);
@@ -15,7 +15,7 @@ const useSignup = () => {
 			const res = await fetch("/api/auth/signup", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ fullName, username, password, confirmPassword, gender }),
+				body: JSON.stringify({ fullName, username, password, confirmPassword, gender, role }),
 			});
 
 			const data = await res.json();
@@ -33,10 +33,9 @@ const useSignup = () => {
 
 	return { loading, signup };
 };
-export default useSignup;
 
-function handleInputErrors({ fullName, username, password, confirmPassword, gender }) {
-	if (!fullName || !username || !password || !confirmPassword || !gender) {
+function handleInputErrors({ fullName, username, password, confirmPassword, gender, role }) {
+	if (!fullName || !username || !password || !confirmPassword || !gender || !role) {
 		toast.error("Please fill in all fields");
 		return false;
 	}
@@ -51,5 +50,18 @@ function handleInputErrors({ fullName, username, password, confirmPassword, gend
 		return false;
 	}
 
+	const validRoles = [
+		"Manager", "Agent", "R&D Role", "R&D Admin", "FE Role",
+		"Staff Access Control Role", "Closer Role", "Team Lead Role",
+		"RNA Specialist Role", "CB Specialist Role", "Decline Specialist Role"
+	];
+
+	if (!validRoles.includes(role)) {
+		toast.error("Invalid role selected");
+		return false;
+	}
+
 	return true;
 }
+
+export default useSignup;
