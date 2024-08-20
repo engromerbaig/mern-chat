@@ -97,7 +97,7 @@ const SignUp = () => {
 							value={inputs.role}
 							onChange={handleRoleChange}
 						>
-							<option value="">Select a role</option>
+							<option value="">Select a role &darr;</option>
 							<option value="Manager">Manager</option>
 							<option value="Agent">Agent</option>
 							<option value="R&D Role">R&D Role</option>
