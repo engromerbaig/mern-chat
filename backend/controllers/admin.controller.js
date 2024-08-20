@@ -47,67 +47,58 @@ export const createSuperAdmin = async (req, res) => {
   }
 };
 
-export const getPendingRoleRequests = async (req, res) => {
-  try {
-    const pendingRequests = await User.find({ roleRequestStatus: 'pending' });
-    // Add role to each user object in pendingRequests
-    const requestsWithRole = pendingRequests.map(user => ({
-      ...user.toObject(),
-      role: user.role, // Include role in response
-    }));
-    res.status(200).json(requestsWithRole);
-  } catch (error) {
-    console.error('Error fetching role requests:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
+
 
 export const approveRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.params;
-
-    const user = await User.findByIdAndUpdate(userId, { roleRequestStatus: 'approved' }, { new: true });
-
+    const { userId } = req.body;
+    
+    const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({
-      message: 'Role request approved',
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        username: user.username,
-        role: user.role, // Include role in response
-      },
-    });
+    if (user.roleRequestStatus !== 'pending') {
+      return res.status(400).json({ error: 'Role request is not pending' });
+    }
+
+    user.roleRequestStatus = 'approved';
+    await user.save();
+    res.status(200).json({ message: 'Role request approved' });
   } catch (error) {
-    console.error('Error approving role request:', error.message);
+    console.log('Error approving role request:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
 export const rejectRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.params;
-
-    const user = await User.findByIdAndUpdate(userId, { roleRequestStatus: 'rejected' }, { new: true });
-
+    const { userId } = req.body;
+    
+    const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({
-      message: 'Role request rejected',
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        username: user.username,
-        role: user.role, // Include role in response
-      },
-    });
+    if (user.roleRequestStatus !== 'pending') {
+      return res.status(400).json({ error: 'Role request is not pending' });
+    }
+
+    user.roleRequestStatus = 'rejected';
+    await user.save();
+    res.status(200).json({ message: 'Role request rejected' });
   } catch (error) {
-    console.error('Error rejecting role request:', error.message);
+    console.log('Error rejecting role request:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getPendingRoleRequests = async (req, res) => {
+  try {
+    const users = await User.find({ roleRequestStatus: 'pending' });
+    res.status(200).json(users);
+  } catch (error) {
+    console.log('Error fetching pending role requests:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

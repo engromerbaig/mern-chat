@@ -1,4 +1,5 @@
 // auth.middleware.js
+
 import User from '../models/user.model.js';
 
 export const isSuperAdmin = async (req, res, next) => {
