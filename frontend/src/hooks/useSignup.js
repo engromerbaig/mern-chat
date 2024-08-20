@@ -1,10 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";  // Import useNavigate
 
 const useSignup = () => {
 	const [loading, setLoading] = useState(false);
 	const { setAuthUser } = useAuthContext();
+	const navigate = useNavigate();  // Initialize useNavigate
 
 	const signup = async ({ fullName, username, password, confirmPassword, gender, role }) => {
 		const success = handleInputErrors({ fullName, username, password, confirmPassword, gender, role });
@@ -24,6 +26,10 @@ const useSignup = () => {
 			}
 			localStorage.setItem("chat-user", JSON.stringify(data));
 			setAuthUser(data);
+
+			// Redirect to a different screen after successful signup
+			navigate("/pending-approval");  // Adjust the path as needed
+
 		} catch (error) {
 			toast.error(error.message);
 		} finally {
