@@ -20,13 +20,18 @@ export const createSuperAdmin = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Profile picture logic based on gender
+    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
+    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
+    const profilePic = gender === 'male' ? boyProfilePic : girlProfilePic;
+
     // Create Super Admin
     const newSuperAdmin = new User({
       fullName,
       username,
       password: hashedPassword,
       gender,
-      profilePic: '', // Optionally set a default profile picture
+      profilePic,
       role: 'Super Admin',
       roleRequestStatus: 'approved',
     });
@@ -46,6 +51,7 @@ export const createSuperAdmin = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 
 
