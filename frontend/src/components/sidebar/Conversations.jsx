@@ -46,7 +46,7 @@ const Conversations = () => {
         <div className='py-2 flex flex-col overflow-auto'>
             {roles.map(role => (
                 <div key={role}>
-                    <h3 className='font-bold  text-lg text-white'>{role}</h3>
+                    <div className='font-bold divider text-base text-white'>{role}</div>
                     {sortedUsers.filter(user => user.role === role).map((user, idx) => (
                         <Conversation
                             key={user._id}
