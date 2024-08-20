@@ -3,16 +3,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Conversation from './Conversation';
 import { useSocketContext } from '../../context/SocketContext';
+import { useAuthContext } from '../../context/AuthContext';
 
 const Conversations = () => {
     const [loading, setLoading] = useState(true);
     const [groupedUsers, setGroupedUsers] = useState({});
     const { onlineUsers } = useSocketContext();
+    const { _id: currentUserId } = useAuthContext(); // Get the current user's ID
 
     useEffect(() => {
         const fetchGroupedUsers = async () => {
             try {
-                const response = await axios.get('/api/users');
+                const response = await axios.get('/api/users', {
+                    params: { currentUserId } // Send the current user ID as a query parameter
+                });
                 setGroupedUsers(response.data);
             } catch (error) {
                 console.error("Error fetching grouped users", error);
@@ -22,7 +26,7 @@ const Conversations = () => {
         };
 
         fetchGroupedUsers();
-    }, []);
+    }, [currentUserId]);
 
     // Flatten the grouped users into a list for sorting
     const flattenedUsers = Object.keys(groupedUsers).reduce((acc, role) => {
