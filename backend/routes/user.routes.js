@@ -1,3 +1,4 @@
+// routes/user.routes.js
 import express from "express";
 import protectRoute from "../middleware/protectRoute.js";
 import { getUsersForSidebar } from "../controllers/user.controller.js";

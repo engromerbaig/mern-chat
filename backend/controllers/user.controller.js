@@ -1,19 +1,24 @@
+// controllers/user.controller.js
 import User from "../models/user.model.js";
-
-// backend control code for sidebar users
 export const getUsersForSidebar = async (req, res) => {
-  try {
-    const loggedInUserId = req.user._id;
+    try {
+        // Fetch only approved users
+        const approvedUsers = await User.find({ roleRequestStatus: 'approved' });
 
-    // Fetch users who are not the logged-in user and whose role request status is approved
-    const filteredUsers = await User.find({
-      _id: { $ne: loggedInUserId },
-      roleRequestStatus: 'approved'  // Only include users with approved role requests
-    }).select("-password");
+        // Group users by role
+        const groupedUsers = approvedUsers.reduce((acc, user) => {
+            const role = user.role;
+            if (!acc[role]) {
+                acc[role] = [];
+            }
+            acc[role].push(user);
+            return acc;
+        }, {});
 
-    res.status(200).json(filteredUsers);
-  } catch (error) {
-    console.error("Error in getUsersForSidebar: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
+        // Send grouped users as response
+        res.status(200).json(groupedUsers);
+    } catch (error) {
+        console.error("Error in getUsersForSidebar controller", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 };
