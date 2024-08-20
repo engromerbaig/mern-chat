@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 
+// backend control code for sidebar users
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;

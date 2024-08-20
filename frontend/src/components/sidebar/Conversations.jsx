@@ -2,6 +2,7 @@ import useGetConversations from "../../hooks/useGetConversations";
 import Conversation from "./Conversation";
 import { useSocketContext } from "../../context/SocketContext";
 
+// parent to generate sidebar users
 const Conversations = () => {
     const { loading, conversations } = useGetConversations();
     const { onlineUsers } = useSocketContext();
