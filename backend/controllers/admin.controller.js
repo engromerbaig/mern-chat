@@ -51,7 +51,7 @@ export const createSuperAdmin = async (req, res) => {
 
 export const approveRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params; // Get userId from URL parameters
     
     const user = await User.findById(userId);
     if (!user) {
@@ -73,7 +73,7 @@ export const approveRoleRequest = async (req, res) => {
 
 export const rejectRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params; // Get userId from URL parameters
     
     const user = await User.findById(userId);
     if (!user) {
