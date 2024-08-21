@@ -13,6 +13,7 @@ export const sendMessage = async (req, res) => {
 		});
 
 		if (!conversation) {
+			// Create a new conversation if it doesn't exist
 			conversation = await Conversation.create({
 				participants: [senderId, receiverId],
 			});
@@ -24,23 +25,21 @@ export const sendMessage = async (req, res) => {
 			message,
 		});
 
+		// Push the new message into the conversation
 		if (newMessage) {
 			conversation.messages.push(newMessage._id);
 		}
 
-		// await conversation.save();
-		// await newMessage.save();
-
-		// this will run in parallel
+		// Save the conversation and the message concurrently
 		await Promise.all([conversation.save(), newMessage.save()]);
 
-		// SOCKET IO FUNCTIONALITY WILL GO HERE
+		// Notify the receiver via Socket.io if they are connected
 		const receiverSocketId = getReceiverSocketId(receiverId);
 		if (receiverSocketId) {
-			// io.to(<socket_id>).emit() used to send events to specific client
 			io.to(receiverSocketId).emit("newMessage", newMessage);
 		}
 
+		// After initiating the chat, make sure the conversation is now visible to both users
 		res.status(201).json(newMessage);
 	} catch (error) {
 		console.log("Error in sendMessage controller: ", error.message);
