@@ -101,7 +101,7 @@ const SignUp = () => {
 							<option value="Manager">Manager</option>
 							<option value="Agent">Agent</option>
 							<option value="R&D Role">R&D Role</option>
-							<option value="R&D Admin">R&D Admin</option>
+							<option value="R&D Admin Role">R&D Admin Role</option>
 							<option value="FE Role">FE Role</option>
 							<option value="Staff Access Control Role">Staff Access Control Role</option>
 							<option value="Closer Role">Closer Role</option>

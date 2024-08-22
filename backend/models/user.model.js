@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
         "Manager",
         "Agent",
         "R&D Role",
-        "R&D Admin",
+        "R&D Admin Role",
         "FE Role",
         "Staff Access Control Role",
         "Closer Role",

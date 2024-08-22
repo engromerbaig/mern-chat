@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 import generateTokenAndSetCookie from '../utils/generateToken.js';
+import { validRoles } from '../utils/validRoles.js';
 
 export const signup = async (req, res) => {
   try {
@@ -17,12 +18,7 @@ export const signup = async (req, res) => {
       return res.status(400).json({ error: "Username already exists" });
     }
 
-    // Handle role validation
-    const validRoles = [
-      "Manager", "Agent", "R&D Role", "R&D Admin Role", "FE Role",
-      "Staff Access Control Role", "Closer Role", "Team Lead Role",
-      "RNA Specialist Role", "CB Specialist Role", "Decline Specialist Role"
-    ];
+    // Handle role validation from external array in utils
 
     if (role && !validRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role selected.' });
