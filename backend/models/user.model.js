@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import { validRoles } from "../utils/validRoles.js";
+
+// Concatenate "Super Admin" to validRoles
+const allRoles = ["Super Admin", ...validRoles];
 
 const userSchema = new mongoose.Schema(
   {
@@ -28,20 +32,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: [
-		"Super Admin",
-        "Manager",
-        "Agent",
-        "R&D Role",
-        "R&D Admin Role",
-        "FE Role",
-        "Staff Access Control Role",
-        "Closer Role",
-        "Team Lead Role",
-        "RNA Specialist Role",
-        "CB Specialist Role",
-        "Decline Specialist Role",
-      ],
+      enum: allRoles, // Use the concatenated roles array
     },
     roleRequestStatus: {
       type: String,
