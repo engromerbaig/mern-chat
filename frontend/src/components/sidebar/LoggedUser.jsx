@@ -46,7 +46,10 @@ const LoggedUser = () => {
                 </div>
             </div>
             <div className="md:text-center">
+
                 <h1 className="text-xl font-bold text-white">{authUser.fullName}</h1>
+                <h1 className=" font-bold text-white text-sm">Role: {authUser.role}</h1>
+
                 <p className="text-white text-xs font-bold">
                     Active Since: {authUser.loginTime ? extractTime(authUser.loginTime) : 'N/A'}
                 </p>
