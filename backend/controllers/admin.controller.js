@@ -51,7 +51,6 @@ export const createSuperAdmin = async (req, res) => {
   }
 };
 
-// backend/controllers/admin.controller.js
 
 
 export const approveRoleRequest = async (req, res) => {
