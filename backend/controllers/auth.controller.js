@@ -59,6 +59,7 @@ export const signup = async (req, res) => {
       fullName: newUser.fullName,
       username: newUser.username,
       profilePic: newUser.profilePic,
+      createdAt: newUser.createdAt, // Include this line
       message: role ? 'Signup successful. Your role request is pending approval.' : 'Signup successful.',
     });
   } catch (error) {

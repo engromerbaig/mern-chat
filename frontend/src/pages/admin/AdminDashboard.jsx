@@ -71,6 +71,9 @@ const AdminDashboard = () => {
                 <p className="text-xl mb-3 text-gray-800">
                   <strong>{request.fullName}</strong> ({request.username}) - {request.role}
                 </p>
+                <p className="text-gray-500 pb-3 text-sm">
+                Requested at: {new Date(request.createdAt).toLocaleString()}
+              </p>
                 <div className="flex space-x-3">
                   <button
                     onClick={() => handleApprove(request._id)}
