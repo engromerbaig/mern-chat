@@ -1,3 +1,4 @@
+// backend\controllers\admin.controller.js
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 
