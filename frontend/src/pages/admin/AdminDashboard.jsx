@@ -64,9 +64,10 @@ const AdminDashboard = () => {
         {pendingRequests.length === 0 ? (
           <p className="text-gray-600 text-center">No pending requests.</p>
         ) : (
-          <ul className="space-y-4">
+          // here goes the approve list
+          <ul className=" grid grid-cols-3 gap-4 ">
             {pendingRequests.map((request) => (
-              <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
+              <li key={request._id} className="bg-gray-100   p-6 rounded-lg shadow-sm">
                 <p className="text-xl mb-3 text-gray-800">
                   <strong>{request.fullName}</strong> ({request.username}) - {request.role}
                 </p>
