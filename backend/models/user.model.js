@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
       default: Date.now
     },
 
+    approvedAt: { type: Date },  // Store the rejection time
+
+    rejectedAt: { type: Date },  // Store the rejection time
+
     approvedRequests: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'

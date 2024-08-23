@@ -14,9 +14,17 @@ const AcceptedRequestsTab = ({ acceptedRequests }) => {
               <p className="text-xl mb-3 text-gray-800">
                 <strong>{request.fullName}</strong> ({request.username}) - {request.role}
               </p>
-              <p className="text-gray-500 pb-3 text-sm">
-                Requested at: {formatDateAndTime(request.createdAt)}
-              </p>
+            
+
+
+              {request.approvedAt && (
+                <p className="text-green-500 pb-3 text-sm">
+                  Accepted at: {formatDateAndTime(request.approvedAt)}
+                </p>
+              )}
+
+
+
             </li>
           ))}
         </ul>

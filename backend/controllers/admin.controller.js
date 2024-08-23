@@ -72,17 +72,18 @@ export const approveRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'approved';
-    
-    // Add the approved user to the Super Admin's approvedRequests array
+    user.approvedAt = new Date();  // Record approval time
+
     const superAdmin = await User.findOne({ role: 'Super Admin' });
     if (!superAdmin) {
       return res.status(404).json({ error: "Super Admin not found" });
     }
+
     superAdmin.approvedRequests.push(user._id);
     await superAdmin.save();
-
     await user.save();
-    res.status(200).json({ message: 'Role request approved' });
+
+    res.status(200).json({ message: 'Role request approved', approvedAt: user.approvedAt });
   } catch (error) {
     console.log('Error approving role request:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -103,22 +104,25 @@ export const rejectRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'rejected';
-    
-    // Add the rejected user to the Super Admin's rejectedRequests array
+    user.rejectedAt = new Date();  // Record rejection time
+
     const superAdmin = await User.findOne({ role: 'Super Admin' });
     if (!superAdmin) {
       return res.status(404).json({ error: "Super Admin not found" });
     }
+
     superAdmin.rejectedRequests.push(user._id);
     await superAdmin.save();
-
     await user.save();
-    res.status(200).json({ message: 'Role request rejected' });
+
+    res.status(200).json({ message: 'Role request rejected', rejectedAt: user.rejectedAt });
   } catch (error) {
     console.log('Error rejecting role request:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
 
 // New function to get approved and rejected requests
 // controllers/admin.controller.js
@@ -137,16 +141,26 @@ export const getPendingRoleRequests = async (req, res) => {
 export const getRequestHistory = async (req, res) => {
   try {
     const superAdmin = await User.findOne({ role: 'Super Admin' })
-      .populate('approvedRequests', 'fullName username role createdAt')
-      .populate('rejectedRequests', 'fullName username role createdAt');
+      .populate('approvedRequests', 'fullName username role createdAt approvedAt')
+      .populate('rejectedRequests', 'fullName username role createdAt rejectedAt');
     
     if (!superAdmin) {
       return res.status(404).json({ error: "Super Admin not found" });
     }
 
     res.status(200).json({
-      approvedRequests: superAdmin.approvedRequests,
-      rejectedRequests: superAdmin.rejectedRequests
+      approvedRequests: superAdmin.approvedRequests.map(req => ({
+        fullName: req.fullName,
+        username: req.username,
+        role: req.role,
+        approvedAt: req.approvedAt  // Make sure this is included
+      })),
+      rejectedRequests: superAdmin.rejectedRequests.map(req => ({
+        fullName: req.fullName,
+        username: req.username,
+        role: req.role,
+        rejectedAt: req.rejectedAt  // Make sure this is included
+      }))
     });
   } catch (error) {
     console.log('Error fetching request history:', error.message);
