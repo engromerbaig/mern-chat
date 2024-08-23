@@ -9,7 +9,7 @@ const AdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPendingRequests = async () => {
@@ -57,29 +57,29 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-black  p-10 flex flex-col">
-      <div className="bg-white shadow-md rounded-lg p-6 mb-8 flex-1">
-        <h1 className="text-2xl font-bold mb-4 text-center">Super Admin Dashboard</h1>
-        <h2 className="text-xl font-semibold mb-4">Pending Role Requests</h2>
+    <div className="h-screen w-full bg-black flex flex-col">
+      <div className="flex-grow overflow-auto bg-white p-6 m-4 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Super Admin Dashboard</h1>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Pending Role Requests</h2>
         {pendingRequests.length === 0 ? (
-          <p>No pending requests.</p>
+          <p className="text-gray-600 text-center">No pending requests.</p>
         ) : (
           <ul className="space-y-4">
             {pendingRequests.map((request) => (
-              <li key={request._id} className="bg-gray-200 p-4 rounded-lg shadow-sm">
-                <p className="text-lg mb-2">
+              <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
+                <p className="text-xl mb-3 text-gray-800">
                   <strong>{request.fullName}</strong> ({request.username}) - {request.role}
                 </p>
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <button
                     onClick={() => handleApprove(request._id)}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition duration-300"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => handleReject(request._id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 transition duration-300"
                   >
                     Reject
                   </button>
@@ -89,11 +89,11 @@ const AdminDashboard = () => {
           </ul>
         )}
       </div>
-      <div className="flex justify-between">
-        <LogoutButton /> {/* Use the LogoutButton component */}
+      <div className="h-10 p-12 bg-black flex justify-between items-center px-6">
+        <LogoutButton />
         <button
           onClick={() => navigate('/')}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300"
         >
           Proceed to Chat
         </button>
