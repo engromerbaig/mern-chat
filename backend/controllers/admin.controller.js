@@ -1,32 +1,30 @@
-// backend\controllers\admin.controller.js
+// backend/controllers/admin.controller.js
+
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
+import { io } from '../socket/socket.js'; // Import the Socket.IO instance
+
 
 export const createSuperAdmin = async (req, res) => {
   try {
     const { fullName, username, password, gender } = req.body;
 
-    // Validate input
     if (!fullName || !username || !password || !gender) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Check if Super Admin already exists
     const existingAdmin = await User.findOne({ role: 'Super Admin' });
     if (existingAdmin) {
       return res.status(400).json({ error: 'Super Admin already exists' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Profile picture logic based on gender
     const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
     const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
     const profilePic = gender === 'male' ? boyProfilePic : girlProfilePic;
 
-    // Create Super Admin
     const newSuperAdmin = new User({
       fullName,
       username,
@@ -44,7 +42,7 @@ export const createSuperAdmin = async (req, res) => {
       fullName: newSuperAdmin.fullName,
       username: newSuperAdmin.username,
       profilePic: newSuperAdmin.profilePic,
-      role: newSuperAdmin.role, // Include role in response
+      role: newSuperAdmin.role,
       message: 'Super Admin created successfully',
     });
   } catch (error) {
@@ -53,15 +51,12 @@ export const createSuperAdmin = async (req, res) => {
   }
 };
 
+// backend/controllers/admin.controller.js
 
-
-
-// controllers/admin.controller.js
 
 export const approveRoleRequest = async (req, res) => {
   try {
     const { userId } = req.params;
-    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -72,7 +67,7 @@ export const approveRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'approved';
-    user.approvedAt = new Date();  // Record approval time
+    user.approvedAt = new Date();
 
     const superAdmin = await User.findOne({ role: 'Super Admin' });
     if (!superAdmin) {
@@ -82,6 +77,9 @@ export const approveRoleRequest = async (req, res) => {
     superAdmin.approvedRequests.push(user._id);
     await superAdmin.save();
     await user.save();
+
+    // Emit event to update stats
+    io.emit("requestStatusChange", { action: 'approved' });
 
     res.status(200).json({ message: 'Role request approved', approvedAt: user.approvedAt });
   } catch (error) {
@@ -93,7 +91,6 @@ export const approveRoleRequest = async (req, res) => {
 export const rejectRoleRequest = async (req, res) => {
   try {
     const { userId } = req.params;
-    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -104,7 +101,7 @@ export const rejectRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'rejected';
-    user.rejectedAt = new Date();  // Record rejection time
+    user.rejectedAt = new Date();
 
     const superAdmin = await User.findOne({ role: 'Super Admin' });
     if (!superAdmin) {
@@ -115,6 +112,9 @@ export const rejectRoleRequest = async (req, res) => {
     await superAdmin.save();
     await user.save();
 
+    // Emit event to update stats
+    io.emit("requestStatusChange", { action: 'rejected' });
+
     res.status(200).json({ message: 'Role request rejected', rejectedAt: user.rejectedAt });
   } catch (error) {
     console.log('Error rejecting role request:', error.message);
@@ -122,10 +122,6 @@ export const rejectRoleRequest = async (req, res) => {
   }
 };
 
-
-
-// New function to get approved and rejected requests
-// controllers/admin.controller.js
 
 export const getPendingRoleRequests = async (req, res) => {
   try {
@@ -153,13 +149,13 @@ export const getRequestHistory = async (req, res) => {
         fullName: req.fullName,
         username: req.username,
         role: req.role,
-        approvedAt: req.approvedAt  // Make sure this is included
+        approvedAt: req.approvedAt
       })),
       rejectedRequests: superAdmin.rejectedRequests.map(req => ({
         fullName: req.fullName,
         username: req.username,
         role: req.role,
-        rejectedAt: req.rejectedAt  // Make sure this is included
+        rejectedAt: req.rejectedAt
       }))
     });
   } catch (error) {
