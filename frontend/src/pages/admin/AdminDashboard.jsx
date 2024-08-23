@@ -13,17 +13,17 @@ const AdminDashboard = () => {
   const [rejectedRequests, setRejectedRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('stats'); // State for active tab
+  const [activeTab, setActiveTab] = useState('stats'); // Default to 'stats'
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('/api/admin/pending-requests');
-        setPendingRequests(response.data);
+        await fetchPendingRequests();
+        await fetchRequestHistory();
         setLoading(false);
       } catch (err) {
-        setError('Failed to load pending requests');
+        setError('Failed to load requests');
         setLoading(false);
       }
     };
@@ -31,14 +31,31 @@ const AdminDashboard = () => {
     fetchRequests();
   }, []);
 
+  const fetchPendingRequests = async () => {
+    try {
+      const response = await axios.get('/api/admin/pending-requests');
+      setPendingRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
+  const fetchRequestHistory = async () => {
+    try {
+      const response = await axios.get('/api/admin/request-history');
+      const data = response.data;
+      setAcceptedRequests(data.approvedRequests);
+      setRejectedRequests(data.rejectedRequests);
+    } catch (error) {
+      console.error('Error fetching request history:', error);
+    }
+  };
+
   const handleApprove = async (userId) => {
     try {
       await axios.post(`/api/admin/approve-role/${userId}`);
-      const approvedRequest = pendingRequests.find((request) => request._id === userId);
-      setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request._id !== userId)
-      );
-      setAcceptedRequests((prevRequests) => [...prevRequests, approvedRequest]);
+      await fetchPendingRequests();
+      await fetchRequestHistory();
     } catch (err) {
       setError('Failed to approve role request');
     }
@@ -47,11 +64,8 @@ const AdminDashboard = () => {
   const handleReject = async (userId) => {
     try {
       await axios.post(`/api/admin/reject-role/${userId}`);
-      const rejectedRequest = pendingRequests.find((request) => request._id === userId);
-      setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request._id !== userId)
-      );
-      setRejectedRequests((prevRequests) => [...prevRequests, rejectedRequest]);
+      await fetchPendingRequests();
+      await fetchRequestHistory();
     } catch (err) {
       setError('Failed to reject role request');
     }

@@ -121,11 +121,24 @@ export const rejectRoleRequest = async (req, res) => {
 };
 
 // New function to get approved and rejected requests
+// controllers/admin.controller.js
+
+export const getPendingRoleRequests = async (req, res) => {
+  try {
+    const users = await User.find({ roleRequestStatus: 'pending' })
+      .select('fullName username profilePic role roleRequestStatus createdAt');
+    res.status(200).json(users);
+  } catch (error) {
+    console.log('Error fetching pending role requests:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 export const getRequestHistory = async (req, res) => {
   try {
     const superAdmin = await User.findOne({ role: 'Super Admin' })
-      .populate('approvedRequests', 'fullName username')
-      .populate('rejectedRequests', 'fullName username');
+      .populate('approvedRequests', 'fullName username role createdAt')
+      .populate('rejectedRequests', 'fullName username role createdAt');
     
     if (!superAdmin) {
       return res.status(404).json({ error: "Super Admin not found" });
@@ -137,16 +150,6 @@ export const getRequestHistory = async (req, res) => {
     });
   } catch (error) {
     console.log('Error fetching request history:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-export const getPendingRoleRequests = async (req, res) => {
-  try {
-    const users = await User.find({ roleRequestStatus: 'pending' })
-      .select('fullName username profilePic role roleRequestStatus');  // Only select these fields
-    res.status(200).json(users);
-  } catch (error) {
-    console.log('Error fetching pending role requests:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

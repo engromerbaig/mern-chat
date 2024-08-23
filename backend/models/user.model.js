@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+
     approvedRequests: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'

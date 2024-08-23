@@ -15,7 +15,7 @@ const RejectedRequestsTab = ({ rejectedRequests }) => {
                 <strong>{request.fullName}</strong> ({request.username}) - {request.role}
               </p>
               <p className="text-gray-500 pb-3 text-sm">
-                Rejected at: {formatDateAndTime(request.createdAt)}
+                Requested at: {formatDateAndTime(request.createdAt)}
               </p>
             </li>
           ))}
