@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import LogoutButton from '../../components/sidebar/LogoutButton';
+import { formatDateAndTime } from '../../utils/extractTime';
 
 console.log("AdminDashboard.jsx");
 
@@ -72,8 +73,8 @@ const AdminDashboard = () => {
                   <strong>{request.fullName}</strong> ({request.username}) - {request.role}
                 </p>
                 <p className="text-gray-500 pb-3 text-sm">
-                Requested at: {new Date(request.createdAt).toLocaleString()}
-              </p>
+                Requested at: {formatDateAndTime(request.createdAt)}
+                </p>
                 <div className="flex space-x-3">
                   <button
                     onClick={() => handleApprove(request._id)}
