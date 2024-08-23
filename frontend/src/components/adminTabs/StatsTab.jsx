@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useSocketContext } from '../../context/SocketContext'; // Import the hook
 
 // Define box styling
 const boxStyle = "py-10 px-6 text-white cursor-pointer rounded-lg flex flex-col items-center justify-center space-y-2";
@@ -14,9 +15,15 @@ const StatsTab = () => {
     rejectedRequests: 0,
   });
 
+  // State to store online users
+  const [onlineUserCount, setOnlineUserCount] = useState(0);
+
   // Hook to handle navigation
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch online users from the context
+  const { onlineUsers } = useSocketContext();
 
   // Function to handle tab navigation
   const handleNavigation = (path) => {
@@ -46,6 +53,9 @@ const StatsTab = () => {
         acceptedRequests,
         rejectedRequests: rejectedRequestsCount,
       });
+
+      // Update online user count
+      setOnlineUserCount(onlineUsers.length);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -54,7 +64,7 @@ const StatsTab = () => {
   // Fetch data when the component mounts
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [onlineUsers]); // Depend on onlineUsers to update when it changes
 
   return (
     <div className="py-4 px-20">
@@ -91,10 +101,10 @@ const StatsTab = () => {
         </div>
         <div
           onClick={() => handleNavigation('/online-now')}
-          className={`${boxStyle} bg-gray-500`} // Placeholder color
+          className={`${boxStyle} bg-gray-500`}
         >
           <p className="text-xl">Online Now</p>
-          <p className="text-3xl font-bold">N/A</p> {/* Placeholder */}
+          <p className="text-3xl font-bold">{onlineUserCount-1}</p> {/* Display the count of online users */}
         </div>
       </div>
     </div>
