@@ -56,9 +56,11 @@ export const createSuperAdmin = async (req, res) => {
 
 
 
+// controllers/admin.controller.js
+
 export const approveRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.params; // Get userId from URL parameters
+    const { userId } = req.params;
     
     const user = await User.findById(userId);
     if (!user) {
@@ -70,6 +72,15 @@ export const approveRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'approved';
+    
+    // Add the approved user to the Super Admin's approvedRequests array
+    const superAdmin = await User.findOne({ role: 'Super Admin' });
+    if (!superAdmin) {
+      return res.status(404).json({ error: "Super Admin not found" });
+    }
+    superAdmin.approvedRequests.push(user._id);
+    await superAdmin.save();
+
     await user.save();
     res.status(200).json({ message: 'Role request approved' });
   } catch (error) {
@@ -80,7 +91,7 @@ export const approveRoleRequest = async (req, res) => {
 
 export const rejectRoleRequest = async (req, res) => {
   try {
-    const { userId } = req.params; // Get userId from URL parameters
+    const { userId } = req.params;
     
     const user = await User.findById(userId);
     if (!user) {
@@ -92,6 +103,15 @@ export const rejectRoleRequest = async (req, res) => {
     }
 
     user.roleRequestStatus = 'rejected';
+    
+    // Add the rejected user to the Super Admin's rejectedRequests array
+    const superAdmin = await User.findOne({ role: 'Super Admin' });
+    if (!superAdmin) {
+      return res.status(404).json({ error: "Super Admin not found" });
+    }
+    superAdmin.rejectedRequests.push(user._id);
+    await superAdmin.save();
+
     await user.save();
     res.status(200).json({ message: 'Role request rejected' });
   } catch (error) {
@@ -100,9 +120,30 @@ export const rejectRoleRequest = async (req, res) => {
   }
 };
 
+// New function to get approved and rejected requests
+export const getRequestHistory = async (req, res) => {
+  try {
+    const superAdmin = await User.findOne({ role: 'Super Admin' })
+      .populate('approvedRequests', 'fullName username')
+      .populate('rejectedRequests', 'fullName username');
+    
+    if (!superAdmin) {
+      return res.status(404).json({ error: "Super Admin not found" });
+    }
+
+    res.status(200).json({
+      approvedRequests: superAdmin.approvedRequests,
+      rejectedRequests: superAdmin.rejectedRequests
+    });
+  } catch (error) {
+    console.log('Error fetching request history:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 export const getPendingRoleRequests = async (req, res) => {
   try {
-    const users = await User.find({ roleRequestStatus: 'pending' });
+    const users = await User.find({ roleRequestStatus: 'pending' })
+      .select('fullName username profilePic role roleRequestStatus');  // Only select these fields
     res.status(200).json(users);
   } catch (error) {
     console.log('Error fetching pending role requests:', error.message);
