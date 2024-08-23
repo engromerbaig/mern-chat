@@ -8,12 +8,15 @@ console.log("AdminDashboard.jsx");
 
 const AdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [acceptedRequests, setAcceptedRequests] = useState([]);
+  const [rejectedRequests, setRejectedRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('stats'); // State for active tab
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPendingRequests = async () => {
+    const fetchRequests = async () => {
       try {
         const response = await axios.get('/api/admin/pending-requests');
         setPendingRequests(response.data);
@@ -24,15 +27,15 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchPendingRequests();
+    fetchRequests();
   }, []);
 
   const handleApprove = async (userId) => {
     try {
       await axios.post(`/api/admin/approve-role/${userId}`);
-      setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request._id !== userId)
-      );
+      const approvedRequest = pendingRequests.find(request => request._id === userId);
+      setPendingRequests(prevRequests => prevRequests.filter(request => request._id !== userId));
+      setAcceptedRequests(prevRequests => [...prevRequests, approvedRequest]);
     } catch (err) {
       setError('Failed to approve role request');
     }
@@ -41,9 +44,9 @@ const AdminDashboard = () => {
   const handleReject = async (userId) => {
     try {
       await axios.post(`/api/admin/reject-role/${userId}`);
-      setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request._id !== userId)
-      );
+      const rejectedRequest = pendingRequests.find(request => request._id === userId);
+      setPendingRequests(prevRequests => prevRequests.filter(request => request._id !== userId));
+      setRejectedRequests(prevRequests => [...prevRequests, rejectedRequest]);
     } catch (err) {
       setError('Failed to reject role request');
     }
@@ -61,39 +64,128 @@ const AdminDashboard = () => {
     <div className="h-screen w-full bg-black flex flex-col">
       <div className="flex-grow overflow-auto bg-white p-6 m-4 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Super Admin Dashboard</h1>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Pending Role Requests</h2>
-        {pendingRequests.length === 0 ? (
-          <p className="text-gray-600 text-center">No pending requests.</p>
-        ) : (
-          // here goes the approve list
-          <ul className=" grid grid-cols-3 gap-4 ">
-            {pendingRequests.map((request) => (
-              <li key={request._id} className="bg-gray-100   p-6 rounded-lg shadow-sm">
-                <p className="text-xl mb-3 text-gray-800">
-                  <strong>{request.fullName}</strong> ({request.username}) - {request.role}
-                </p>
-                <p className="text-gray-500 pb-3 text-sm">
-                Requested at: {formatDateAndTime(request.createdAt)}
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleApprove(request._id)}
-                    className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition duration-300"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(request._id)}
-                    className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 transition duration-300"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+
+        {/* Tabs */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`px-6 py-3 rounded-t-lg ${activeTab === 'stats' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            Stats
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-6 py-3 rounded-t-lg ${activeTab === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            Pending Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('accepted')}
+            className={`px-6 py-3 rounded-t-lg ${activeTab === 'accepted' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            Accepted Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('rejected')}
+            className={`px-6 py-3 rounded-t-lg ${activeTab === 'rejected' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            Rejected Requests
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div>
+          {activeTab === 'stats' && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">Statistics</h2>
+              {/* Add your statistics content here */}
+              <p className="text-gray-600 text-center">Placeholder for stats.</p>
+            </div>
+          )}
+
+          {activeTab === 'pending' && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">Pending Role Requests</h2>
+              {pendingRequests.length === 0 ? (
+                <p className="text-gray-600 text-center">No pending requests.</p>
+              ) : (
+                <ul className="grid grid-cols-3 gap-4">
+                  {pendingRequests.map((request) => (
+                    <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
+                      <p className="text-xl mb-3 text-gray-800">
+                        <strong>{request.fullName}</strong> ({request.username}) - {request.role}
+                      </p>
+                      <p className="text-gray-500 pb-3 text-sm">
+                        Requested at: {formatDateAndTime(request.createdAt)}
+                      </p>
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => handleApprove(request._id)}
+                          className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition duration-300"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(request._id)}
+                          className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 transition duration-300"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'accepted' && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">Accepted Requests</h2>
+              {acceptedRequests.length === 0 ? (
+                <p className="text-gray-600 text-center">No accepted requests.</p>
+              ) : (
+                <ul className="grid grid-cols-3 gap-4">
+                  {acceptedRequests.map((request) => (
+                    <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
+                      <p className="text-xl mb-3 text-gray-800">
+                        <strong>{request.fullName}</strong> ({request.username}) - {request.role}
+                      </p>
+                      <p className="text-gray-500 pb-3 text-sm">
+                        Approved at: {formatDateAndTime(request.createdAt)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'rejected' && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">Rejected Requests</h2>
+              {rejectedRequests.length === 0 ? (
+                <p className="text-gray-600 text-center">No rejected requests.</p>
+              ) : (
+                <ul className="grid grid-cols-3 gap-4">
+                  {rejectedRequests.map((request) => (
+                    <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
+                      <p className="text-xl mb-3 text-gray-800">
+                        <strong>{request.fullName}</strong> ({request.username}) - {request.role}
+                      </p>
+                      <p className="text-gray-500 pb-3 text-sm">
+                        Rejected at: {formatDateAndTime(request.createdAt)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Bottom section */}
       <div className="h-10 p-12 bg-black flex justify-between items-center px-6">
         <LogoutButton />
         <button
