@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import GenderCheckbox from "./GenderCheckbox";
 import { useState } from "react";
 import useSignup from "../../hooks/useSignup";
+import { validRoles } from "../../utils/validRoles";
 
 const SignUp = () => {
 	const [inputs, setInputs] = useState({
@@ -98,17 +99,11 @@ const SignUp = () => {
 							onChange={handleRoleChange}
 						>
 							<option value="">Select a role &darr;</option>
-							<option value="Manager">Manager</option>
-							<option value="Agent">Agent</option>
-							<option value="R&D Role">R&D Role</option>
-							<option value="R&D Admin Role">R&D Admin Role</option>
-							<option value="FE Role">FE Role</option>
-							<option value="Staff Access Control Role">Staff Access Control Role</option>
-							<option value="Closer Role">Closer Role</option>
-							<option value="Team Lead Role">Team Lead Role</option>
-							<option value="RNA Specialist Role">RNA Specialist Role</option>
-							<option value="CB Specialist Role">CB Specialist Role</option>
-							<option value="Decline Specialist Role">Decline Specialist Role</option>
+							{validRoles.map((role) => (
+								<option key={role} value={role}>
+									{role}
+								</option>
+							))}
 						</select>
 					</div>
 
