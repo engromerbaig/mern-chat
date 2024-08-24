@@ -24,6 +24,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      validate: {
+        validator: function(value) {
+          // Ensure username doesn't contain spaces
+          return !/\s/.test(value);
+        },
+        message: 'Username should not contain spaces.',
+      },
     },
     password: {
       type: String,
@@ -51,7 +58,7 @@ const userSchema = new mongoose.Schema(
     },
     createdAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
     approvedAt: { type: Date },  // Store the rejection time
     rejectedAt: { type: Date },  // Store the rejection time
@@ -67,9 +74,14 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to convert fullName to sentence case
+// Pre-save hook to convert fullName to sentence case and remove spaces from username
 userSchema.pre('save', function(next) {
+  // Convert fullName to sentence case
   this.fullName = toSentenceCase(this.fullName);
+
+  // Remove spaces from username
+  this.username = this.username.replace(/\s+/g, '');
+
   next();
 });
 
