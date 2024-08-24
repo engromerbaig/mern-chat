@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSocketContext } from '../../context/SocketContext';
 
-const boxStyle = "py-10 px-6 text-white cursor-pointer rounded-lg flex flex-col items-center justify-center space-y-2";
+const boxStyle = "py-10 px-6 text-white  rounded-lg flex flex-col items-center justify-center space-y-2";
 
 const StatsTab = () => {
   const { stats, onlineUsers, fetchStats } = useSocketContext();
@@ -34,7 +34,7 @@ const StatsTab = () => {
         </div>
         <div
           onClick={() => handleNavigation('/pending-requests')}
-          className={`${boxStyle} bg-yellow-500`}
+          className={`${boxStyle} bg-yellow-500 cursor-pointer`}
         >
           <p className="text-xl">Pending Requests</p>
           <p className="text-3xl font-bold">{stats.pendingRequests}</p>
@@ -43,14 +43,14 @@ const StatsTab = () => {
       <div className="grid grid-cols-3 gap-4">
         <div
           onClick={() => handleNavigation('/accepted-requests')}
-          className={`${boxStyle} bg-green-500`}
+          className={`${boxStyle} bg-green-500 cursor-pointer`}
         >
           <p className="text-xl">Accepted Requests</p>
           <p className="text-3xl font-bold">{stats.acceptedRequests}</p>
         </div>
         <div
           onClick={() => handleNavigation('/rejected-requests')}
-          className={`${boxStyle} bg-red-500`}
+          className={`${boxStyle} bg-red-500 cursor-pointer`}
         >
           <p className="text-xl">Rejected Requests</p>
           <p className="text-3xl font-bold">{stats.rejectedRequests}</p>
