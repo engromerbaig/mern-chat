@@ -6,6 +6,7 @@ import PendingRequestsTab from '../../components/adminTabs/PendingRequestsTab';
 import AcceptedRequestsTab from '../../components/adminTabs/AcceptedRequestsTab';
 import RejectedRequestsTab from '../../components/adminTabs/RejectedRequestsTab';
 import { useSocketContext } from '../../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { pendingRequests, fetchPendingRequests } = useSocketContext();
@@ -14,6 +15,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
+
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchRequests = async () => {
