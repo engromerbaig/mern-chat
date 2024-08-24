@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
-import StatsTab from '../../components/adminTabs/StatsTab';
-import PendingRequestsTab from '../../components/adminTabs/PendingRequestsTab';
-import AcceptedRequestsTab from '../../components/adminTabs/AcceptedRequestsTab';
-import RejectedRequestsTab from '../../components/adminTabs/RejectedRequestsTab';
 import { useSocketContext } from '../../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
+
+// Lazy load the tab components
+const StatsTab = lazy(() => import('../../components/adminTabs/StatsTab'));
+const PendingRequestsTab = lazy(() => import('../../components/adminTabs/PendingRequestsTab'));
+const AcceptedRequestsTab = lazy(() => import('../../components/adminTabs/AcceptedRequestsTab'));
+const RejectedRequestsTab = lazy(() => import('../../components/adminTabs/RejectedRequestsTab'));
 
 const AdminDashboard = () => {
   const { pendingRequests, fetchPendingRequests } = useSocketContext();
@@ -15,15 +17,15 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
-
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        await fetchPendingRequests();
-        await fetchRequestHistory();
+        await Promise.all([
+          fetchPendingRequests(),
+          fetchRequestHistory(),
+        ]);
         setLoading(false);
       } catch (err) {
         setError('Failed to load requests');
@@ -46,7 +48,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleApprove = async (userId) => {
+  const handleApprove = useCallback(async (userId) => {
     try {
       await axios.post(`/api/admin/approve-role/${userId}`);
       await fetchPendingRequests();
@@ -54,9 +56,9 @@ const AdminDashboard = () => {
     } catch (err) {
       setError('Failed to approve role request');
     }
-  };
+  }, [fetchPendingRequests, fetchRequestHistory]);
 
-  const handleReject = async (userId) => {
+  const handleReject = useCallback(async (userId) => {
     try {
       await axios.post(`/api/admin/reject-role/${userId}`);
       await fetchPendingRequests();
@@ -64,11 +66,7 @@ const AdminDashboard = () => {
     } catch (err) {
       setError('Failed to reject role request');
     }
-  };
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
+  }, [fetchPendingRequests, fetchRequestHistory]);
 
   if (loading) {
     return <div className="text-center text-gray-600">Loading...</div>;
@@ -113,16 +111,18 @@ const AdminDashboard = () => {
 
         {/* Tab Content */}
         <div>
-          {activeTab === 'stats' && <StatsTab onTabChange={handleTabChange} />}
-          {activeTab === 'pending' && (
-            <PendingRequestsTab
-              pendingRequests={pendingRequests}
-              handleApprove={handleApprove}
-              handleReject={handleReject}
-            />
-          )}
-          {activeTab === 'accepted' && <AcceptedRequestsTab acceptedRequests={acceptedRequests} />}
-          {activeTab === 'rejected' && <RejectedRequestsTab rejectedRequests={rejectedRequests} />}
+          <Suspense fallback={<div className="text-center text-gray-600">Loading...</div>}>
+            {activeTab === 'stats' && <StatsTab />}
+            {activeTab === 'pending' && (
+              <PendingRequestsTab
+                pendingRequests={pendingRequests}
+                handleApprove={handleApprove}
+                handleReject={handleReject}
+              />
+            )}
+            {activeTab === 'accepted' && <AcceptedRequestsTab acceptedRequests={acceptedRequests} />}
+            {activeTab === 'rejected' && <RejectedRequestsTab rejectedRequests={rejectedRequests} />}
+          </Suspense>
         </div>
       </div>
 
