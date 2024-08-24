@@ -1,4 +1,5 @@
 // frontend/src/context/SocketContext.jsx
+
 import { createContext, useState, useEffect, useContext } from "react";
 import { useAuthContext } from "./AuthContext";
 import io from "socket.io-client";
@@ -19,6 +20,7 @@ export const SocketContextProvider = ({ children }) => {
     acceptedRequests: 0,
     rejectedRequests: 0,
   });
+  const [pendingRequests, setPendingRequests] = useState([]);
   const { authUser } = useAuthContext();
 
   useEffect(() => {
@@ -36,7 +38,8 @@ export const SocketContextProvider = ({ children }) => {
       });
 
       socket.on("requestStatusChange", () => {
-        fetchStats(); // Update stats when an event is received
+        fetchStats();
+        fetchPendingRequests();
       });
 
       return () => socket.close();
@@ -71,8 +74,17 @@ export const SocketContextProvider = ({ children }) => {
     }
   };
 
+  const fetchPendingRequests = async () => {
+    try {
+      const response = await axios.get('/api/admin/pending-requests');
+      setPendingRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers, stats, fetchStats }}>
+    <SocketContext.Provider value={{ socket, onlineUsers, stats, fetchStats, pendingRequests, fetchPendingRequests }}>
       {children}
     </SocketContext.Provider>
   );

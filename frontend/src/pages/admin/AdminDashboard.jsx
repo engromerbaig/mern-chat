@@ -1,19 +1,22 @@
+// frontend/src/pages/admin/AdminDashboard.jsx
+
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
 import StatsTab from '../../components/adminTabs/StatsTab';
 import PendingRequestsTab from '../../components/adminTabs/PendingRequestsTab';
 import AcceptedRequestsTab from '../../components/adminTabs/AcceptedRequestsTab';
 import RejectedRequestsTab from '../../components/adminTabs/RejectedRequestsTab';
+import { useSocketContext } from '../../context/SocketContext';
 
 const AdminDashboard = () => {
-  const [pendingRequests, setPendingRequests] = useState([]);
+  const { pendingRequests, fetchPendingRequests } = useSocketContext();
   const [acceptedRequests, setAcceptedRequests] = useState([]);
   const [rejectedRequests, setRejectedRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('stats'); // Default to 'stats'
+  const [activeTab, setActiveTab] = useState('stats');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,16 +32,7 @@ const AdminDashboard = () => {
     };
 
     fetchRequests();
-  }, []);
-
-  const fetchPendingRequests = async () => {
-    try {
-      const response = await axios.get('/api/admin/pending-requests');
-      setPendingRequests(response.data);
-    } catch (error) {
-      console.error('Error fetching pending requests:', error);
-    }
-  };
+  }, [fetchPendingRequests]);
 
   const fetchRequestHistory = async () => {
     try {
@@ -48,6 +42,7 @@ const AdminDashboard = () => {
       setRejectedRequests(data.rejectedRequests);
     } catch (error) {
       console.error('Error fetching request history:', error);
+      setError('Failed to fetch request history');
     }
   };
 
