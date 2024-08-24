@@ -1,7 +1,4 @@
-// frontend/src/pages/admin/AdminDashboard.jsx
-
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
 import StatsTab from '../../components/adminTabs/StatsTab';
@@ -17,7 +14,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -66,6 +62,10 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   if (loading) {
     return <div className="text-center text-gray-600">Loading...</div>;
   }
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
 
         {/* Tab Content */}
         <div>
-          {activeTab === 'stats' && <StatsTab />}
+          {activeTab === 'stats' && <StatsTab onTabChange={handleTabChange} />}
           {activeTab === 'pending' && (
             <PendingRequestsTab
               pendingRequests={pendingRequests}
