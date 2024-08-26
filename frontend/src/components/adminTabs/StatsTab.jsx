@@ -27,7 +27,7 @@ const StatsTab = ({ onTabChange }) => {
         </div>
         <div
           onClick={() => onTabChange('pending')}
-          className={`${boxStyle} bg-yellow-500 cursor-pointer`}
+          className={`${boxStyle} bg-yellow-500`}
         >
           <p className="text-xl">Pending Requests</p>
           <p className="text-3xl font-bold">{stats.pendingRequests}</p>
@@ -36,14 +36,14 @@ const StatsTab = ({ onTabChange }) => {
       <div className="grid grid-cols-3 gap-4">
         <div
           onClick={() => onTabChange('accepted')}
-          className={`${boxStyle} bg-green-500 cursor-pointer`}
+          className={`${boxStyle} bg-green-500 `}
         >
           <p className="text-xl">Accepted Requests</p>
           <p className="text-3xl font-bold">{stats.acceptedRequests}</p>
         </div>
         <div
           onClick={() => onTabChange('rejected')}
-          className={`${boxStyle} bg-red-500 cursor-pointer`}
+          className={`${boxStyle} bg-red-500 `}
         >
           <p className="text-xl">Rejected Requests</p>
           <p className="text-3xl font-bold">{stats.rejectedRequests}</p>
