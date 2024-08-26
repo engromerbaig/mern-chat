@@ -1,5 +1,3 @@
-// frontend/src/context/SocketContext.jsx
-
 import { createContext, useState, useEffect, useContext } from "react";
 import { useAuthContext } from "./AuthContext";
 import io from "socket.io-client";
@@ -30,17 +28,33 @@ export const SocketContextProvider = ({ children }) => {
           userId: authUser._id,
         },
       });
-
       setSocket(socket);
 
       socket.on("getOnlineUsers", (users) => {
         setOnlineUsers(users);
       });
 
-      socket.on("requestStatusChange", () => {
-        fetchStats();
+      socket.on("requestStatusChange", (changeType) => {
+        if (changeType === 'new') {
+          setStats(prevStats => ({
+            ...prevStats,
+            totalRequests: prevStats.totalRequests + 1,
+            pendingRequests: prevStats.pendingRequests + 1
+          }));
+        } else if (changeType === 'accepted' || changeType === 'rejected') {
+          setStats(prevStats => ({
+            ...prevStats,
+            pendingRequests: prevStats.pendingRequests - 1,
+            [changeType === 'accepted' ? 'acceptedRequests' : 'rejectedRequests']: 
+              prevStats[changeType === 'accepted' ? 'acceptedRequests' : 'rejectedRequests'] + 1
+          }));
+        }
         fetchPendingRequests();
       });
+
+      // Initial fetch of stats and pending requests
+      fetchStats();
+      fetchPendingRequests();
 
       return () => socket.close();
     } else {
@@ -53,10 +67,12 @@ export const SocketContextProvider = ({ children }) => {
 
   const fetchStats = async () => {
     try {
-      const pendingResponse = await axios.get('/api/admin/pending-requests');
-      const pendingRequests = Array.isArray(pendingResponse.data) ? pendingResponse.data.length : 0;
+      const [pendingResponse, historyResponse] = await Promise.all([
+        axios.get('/api/admin/pending-requests'),
+        axios.get('/api/admin/request-history')
+      ]);
 
-      const historyResponse = await axios.get('/api/admin/request-history');
+      const pendingRequests = Array.isArray(pendingResponse.data) ? pendingResponse.data.length : 0;
       const { approvedRequests, rejectedRequests } = historyResponse.data;
       const acceptedRequests = Array.isArray(approvedRequests) ? approvedRequests.length : 0;
       const rejectedRequestsCount = Array.isArray(rejectedRequests) ? rejectedRequests.length : 0;
