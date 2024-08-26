@@ -10,7 +10,6 @@ import PendingApproval from "./pages/pendingApproval/PendingApproval";
 
 function App() {
   const { authUser } = useAuthContext();
-  console.log('authUser:', authUser);
 
 
   return (

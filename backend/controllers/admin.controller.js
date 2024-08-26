@@ -145,12 +145,14 @@ export const getRequestHistory = async (req, res) => {
 
     res.status(200).json({
       approvedRequests: superAdmin.approvedRequests.map(req => ({
+        _id: req._id,  // Add this line
         fullName: req.fullName,
         username: req.username,
         role: req.role,
         approvedAt: req.approvedAt
       })),
       rejectedRequests: superAdmin.rejectedRequests.map(req => ({
+        _id: req._id,  // Add this line
         fullName: req.fullName,
         username: req.username,
         role: req.role,
