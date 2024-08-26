@@ -15,7 +15,7 @@ const LogoutButton = () => {
   const isOnDashboard = location.pathname === '/admin-dashboard';
 
   return (
-    <div className='mt-auto flex gap-6 items-center'>
+    <div className='mt-auto flex gap-6 items-center justify-between'>
 		          <BiLogOut className='w-6 h-6 text-white cursor-pointer' onClick={logout} />
 
       {!loading ? (
