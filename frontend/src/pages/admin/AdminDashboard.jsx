@@ -1,11 +1,9 @@
-// frontend\src\pages\admin\AdminDashboard.jsx
 import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
 import { useSocketContext } from '../../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
 
-// Lazy load the tab components
 const StatsTab = lazy(() => import('../../components/adminTabs/StatsTab'));
 const PendingRequestsTab = lazy(() => import('../../components/adminTabs/PendingRequestsTab'));
 const AcceptedRequestsTab = lazy(() => import('../../components/adminTabs/AcceptedRequestsTab'));
@@ -37,7 +35,7 @@ const AdminDashboard = () => {
     fetchRequests();
   }, [fetchPendingRequests]);
 
-  const fetchRequestHistory = async () => {
+  const fetchRequestHistory = useCallback(async () => {
     try {
       const response = await axios.get('/api/admin/request-history');
       const data = response.data;
@@ -47,13 +45,14 @@ const AdminDashboard = () => {
       console.error('Error fetching request history:', error);
       setError('Failed to fetch request history');
     }
-  };
+  }, []); // Memoizing fetchRequestHistory
 
   const handleApprove = useCallback(async (userId) => {
     try {
       await axios.post(`/api/admin/approve-role/${userId}`);
       await fetchPendingRequests();
       await fetchRequestHistory();
+      setError(null); // Clear error if successful
     } catch (err) {
       setError('Failed to approve role request');
     }
@@ -64,6 +63,7 @@ const AdminDashboard = () => {
       await axios.post(`/api/admin/reject-role/${userId}`);
       await fetchPendingRequests();
       await fetchRequestHistory();
+      setError(null); // Clear error if successful
     } catch (err) {
       setError('Failed to reject role request');
     }
@@ -84,30 +84,15 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`px-6 py-3 rounded-lg ${activeTab === 'stats' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-          >
-            Stats
-          </button>
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`px-6 py-3 rounded-lg ${activeTab === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-          >
-            Pending Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('accepted')}
-            className={`px-6 py-3 rounded-lg ${activeTab === 'accepted' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-          >
-            Accepted Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('rejected')}
-            className={`px-6 py-3 rounded-lg ${activeTab === 'rejected' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-          >
-            Rejected Requests
-          </button>
+          {['stats', 'pending', 'accepted', 'rejected'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 rounded-lg ${activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)} Requests
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
