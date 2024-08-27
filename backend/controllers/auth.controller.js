@@ -81,39 +81,55 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-	try {
-		const { username, password } = req.body;
-		const user = await User.findOne({ username });
+  try {
+    const { usernameOrEmail, password } = req.body;
 
-		if (!user) {
-			return res.status(400).json({ error: "Invalid username or password" });
-		}
+    // Ensure both username/email and password are provided
+    if (!usernameOrEmail || !password) {
+      return res.status(400).json({ error: "Please provide either a username or email, and password." });
+    }
 
-		const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    // Find user by either username or email
+    const user = await User.findOne({
+      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
+    });
 
-		if (!isPasswordCorrect) {
-			return res.status(400).json({ error: "Invalid username or password" });
-		}
+    // If user is not found
+    if (!user) {
+      return res.status(400).json({ error: "Invalid username/email or password." });
+    }
 
-		if (user.roleRequestStatus !== 'approved') {
-			return res.status(403).json({ error: 'Your role request is pending approval.' });
-		}
+    // Check if password is correct
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid username/email or password." });
+    }
 
-		generateTokenAndSetCookie(user._id, res);
+    // Check if role request is approved
+    if (user.roleRequestStatus !== 'approved') {
+      return res.status(403).json({ error: 'Your role request is pending approval.' });
+    }
 
-		res.status(200).json({
-			_id: user._id,
-			fullName: user.fullName,
-			username: user.username,
-			role: user.role, // Ensure this line includes the role
+    // Generate token and set cookie
+    generateTokenAndSetCookie(user._id, res);
 
-			profilePic: user.profilePic,
-		});
-	} catch (error) {
-		console.log("Error in login controller", error.message);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
+    // Send response back to the client
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login controller:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
+
+
+
 
 export const logout = (req, res) => {
 	try {
