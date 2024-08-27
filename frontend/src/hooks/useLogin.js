@@ -1,7 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
-
 import { useNavigate } from "react-router-dom";
 
 const useLogin = () => {
@@ -9,15 +8,15 @@ const useLogin = () => {
     const { setAuthUser } = useAuthContext();
     const navigate = useNavigate(); // Get navigate function from react-router-dom
 
-    const login = async (username, password) => {
-        const success = handleInputErrors(username, password);
+    const login = async (username, email, password) => {
+        const success = handleInputErrors(username, email, password);
         if (!success) return;
         setLoading(true);
         try {
             const res = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, email, password }), // Send username and email separately
             });
 
             const data = await res.json();
@@ -50,9 +49,13 @@ const useLogin = () => {
 
 export default useLogin;
 
-function handleInputErrors(username, password) {
-    if (!username || !password) {
-        toast.error("Please fill in all fields");
+function handleInputErrors(username, email, password) {
+    if (!username && !email) {
+        toast.error("Please provide either a username or email.");
+        return false;
+    }
+    if (!password) {
+        toast.error("Please provide a password.");
         return false;
     }
 
