@@ -2,6 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";  // Import useNavigate
+import { validRoles } from "../utils/validRoles";  // Import validRoles
 
 const useSignup = () => {
     const [loading, setLoading] = useState(false);
@@ -64,12 +65,6 @@ function handleInputErrors({ fullName, username, email, password, confirmPasswor
     }
 
     // Validate role
-    const validRoles = [
-        "Manager", "Agent", "R&D Role", "R&D Admin Role", "FE Role",
-        "Staff Access Control Role", "Closer Role", "Team Lead Role",
-        "RNA Specialist Role", "CB Specialist Role", "Decline Specialist Role"
-    ];
-
     if (!validRoles.includes(role)) {
         toast.error("Invalid role selected");
         return false;
