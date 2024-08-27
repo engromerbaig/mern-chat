@@ -82,17 +82,20 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { usernameOrEmail, password } = req.body;
+    const { username, email, password } = req.body;
 
-    // Ensure both username/email and password are provided
-    if (!usernameOrEmail || !password) {
+    // Ensure that either username or email, and password are provided
+    if ((!username && !email) || !password) {
       return res.status(400).json({ error: "Please provide either a username or email, and password." });
     }
 
     // Find user by either username or email
-    const user = await User.findOne({
-      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
-    });
+    let user;
+    if (username) {
+      user = await User.findOne({ username });
+    } else if (email) {
+      user = await User.findOne({ email });
+    }
 
     // If user is not found
     if (!user) {
@@ -127,6 +130,7 @@ export const login = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 
 
