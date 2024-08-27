@@ -5,21 +5,31 @@ import { validRoles } from '../utils/validRoles.js';
 
 export const signup = async (req, res) => {
   try {
-    const { fullName, username, password, confirmPassword, gender, role } = req.body;
+    const { fullName, username, password, confirmPassword, email, gender, role } = req.body;
 
     // Validate passwords
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Passwords don't match" });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ username });
+    // Validate email format (this regex is also used in the model)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format." });
+    }
+
+    // Check if the username or email already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      return res.status(400).json({ error: "Username already exists" });
+      if (existingUser.username === username) {
+        return res.status(400).json({ error: "Username already exists." });
+      }
+      if (existingUser.email === email) {
+        return res.status(400).json({ error: "Email already exists." });
+      }
     }
 
     // Handle role validation from external array in utils
-
     if (role && !validRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role selected.' });
     }
@@ -33,11 +43,12 @@ export const signup = async (req, res) => {
     const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
 
     // Set roleRequestStatus to pending for non-Super Admin roles
-    const roleRequestStatus = role ? 'pending' : 'approved';
+    const roleRequestStatus = role && role !== 'Super Admin' ? 'pending' : 'approved';
 
     const newUser = new User({
       fullName,
       username,
+      email, // Include email in the user document
       password: hashedPassword,
       gender,
       profilePic: gender === 'male' ? boyProfilePic : girlProfilePic,
@@ -45,7 +56,7 @@ export const signup = async (req, res) => {
       roleRequestStatus,
     });
 
-    // Save user to database
+    // Save user to the database
     await newUser.save();
 
     // Generate token and set cookie only if the role request is approved
@@ -58,9 +69,10 @@ export const signup = async (req, res) => {
       _id: newUser._id,
       fullName: newUser.fullName,
       username: newUser.username,
+      email: newUser.email, // Include the email in the response
       profilePic: newUser.profilePic,
-      createdAt: newUser.createdAt, // Include this line
-      message: role ? 'Signup successful. Your role request is pending approval.' : 'Signup successful.',
+      createdAt: newUser.createdAt,
+      message: role && role !== 'Super Admin' ? 'Signup successful. Your role request is pending approval.' : 'Signup successful.',
     });
   } catch (error) {
     console.log("Error in signup controller", error.message);
