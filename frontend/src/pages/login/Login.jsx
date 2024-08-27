@@ -1,24 +1,28 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import useLogin from "../../hooks/useLogin";
+import { Link } from "react-router-dom";
 
 const Login = () => {
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");  // Added email state
+    const [usernameOrEmail, setUsernameOrEmail] = useState(""); // Single field for username or email
     const [password, setPassword] = useState("");
 
     const { loading, login } = useLogin();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Ensure either username or email is provided
-        if (!username && !email) {
-            return toast.error("Please provide either a username or email.");
+
+        if (!usernameOrEmail) {
+            toast.error("Please provide a username or email.");
+            return;
         }
         if (!password) {
-            return toast.error("Please provide a password.");
+            toast.error("Please provide a password.");
+            return;
         }
-        await login(username, email, password);
+
+        // Call login with usernameOrEmail and password
+        await login(usernameOrEmail, password);
     };
 
     return (
@@ -32,27 +36,14 @@ const Login = () => {
                 <form onSubmit={handleSubmit}>
                     <div>
                         <label className='label p-2'>
-                            <span className='text-base label-text'>Username (optional)</span>
+                            <span className='text-base label-text'>Username or Email</span>
                         </label>
                         <input
                             type='text'
-                            placeholder='Enter username'
+                            placeholder='Enter username or email'
                             className='w-full input input-bordered h-10'
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className='label p-2'>
-                            <span className='text-base label-text'>Email (optional)</span>
-                        </label>
-                        <input
-                            type='email'
-                            placeholder='Enter email'
-                            className='w-full input input-bordered h-10'
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={usernameOrEmail}
+                            onChange={(e) => setUsernameOrEmail(e.target.value)}
                         />
                     </div>
 
@@ -72,7 +63,7 @@ const Login = () => {
                     <div className="py-4">
                         <div>
                             <button className='btn w-1/2 flex justify-center mx-auto btn-sm mt-4' disabled={loading}>
-                                {loading ? <span className='loading loading-spinner '></span> : "Login"}
+                                {loading ? <span className='loading loading-spinner'></span> : "Login"}
                             </button>
                         </div>
 

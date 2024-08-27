@@ -6,17 +6,25 @@ import { useNavigate } from "react-router-dom";
 const useLogin = () => {
     const [loading, setLoading] = useState(false);
     const { setAuthUser } = useAuthContext();
-    const navigate = useNavigate(); // Get navigate function from react-router-dom
+    const navigate = useNavigate();
 
-    const login = async (username, email, password) => {
-        const success = handleInputErrors(username, email, password);
+    const login = async (usernameOrEmail, password) => {
+        // Validate input
+        const success = handleInputErrors(usernameOrEmail, password);
         if (!success) return;
+
         setLoading(true);
         try {
+            // Prepare request body with either username or email
+            const requestBody = {
+                password,
+                ...(usernameOrEmail.includes('@') ? { email: usernameOrEmail } : { username: usernameOrEmail })
+            };
+
             const res = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, email, password }), // Send username and email separately
+                body: JSON.stringify(requestBody),
             });
 
             const data = await res.json();
@@ -49,9 +57,9 @@ const useLogin = () => {
 
 export default useLogin;
 
-function handleInputErrors(username, email, password) {
-    if (!username && !email) {
-        toast.error("Please provide either a username or email.");
+function handleInputErrors(usernameOrEmail, password) {
+    if (!usernameOrEmail) {
+        toast.error("Please provide a username or email.");
         return false;
     }
     if (!password) {
