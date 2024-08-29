@@ -37,6 +37,19 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: function(value) {
+          // Simple regex for email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(value);
+        },
+        message: 'Please enter a valid email address.',
+      },
+    },
     gender: {
       type: String,
       required: true,

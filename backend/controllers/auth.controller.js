@@ -5,21 +5,31 @@ import { validRoles } from '../utils/validRoles.js';
 
 export const signup = async (req, res) => {
   try {
-    const { fullName, username, password, confirmPassword, gender, role } = req.body;
+    const { fullName, username, password, confirmPassword, email, gender, role } = req.body;
 
     // Validate passwords
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Passwords don't match" });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ username });
+    // Validate email format (this regex is also used in the model)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format." });
+    }
+
+    // Check if the username or email already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      return res.status(400).json({ error: "Username already exists" });
+      if (existingUser.username === username) {
+        return res.status(400).json({ error: "Username already exists." });
+      }
+      if (existingUser.email === email) {
+        return res.status(400).json({ error: "Email already exists." });
+      }
     }
 
     // Handle role validation from external array in utils
-
     if (role && !validRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role selected.' });
     }
@@ -33,11 +43,12 @@ export const signup = async (req, res) => {
     const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
 
     // Set roleRequestStatus to pending for non-Super Admin roles
-    const roleRequestStatus = role ? 'pending' : 'approved';
+    const roleRequestStatus = role && role !== 'Super Admin' ? 'pending' : 'approved';
 
     const newUser = new User({
       fullName,
       username,
+      email, // Include email in the user document
       password: hashedPassword,
       gender,
       profilePic: gender === 'male' ? boyProfilePic : girlProfilePic,
@@ -45,7 +56,7 @@ export const signup = async (req, res) => {
       roleRequestStatus,
     });
 
-    // Save user to database
+    // Save user to the database
     await newUser.save();
 
     // Generate token and set cookie only if the role request is approved
@@ -58,9 +69,10 @@ export const signup = async (req, res) => {
       _id: newUser._id,
       fullName: newUser.fullName,
       username: newUser.username,
+      email: newUser.email, // Include the email in the response
       profilePic: newUser.profilePic,
-      createdAt: newUser.createdAt, // Include this line
-      message: role ? 'Signup successful. Your role request is pending approval.' : 'Signup successful.',
+      createdAt: newUser.createdAt,
+      message: role && role !== 'Super Admin' ? 'Signup successful. Your role request is pending approval.' : 'Signup successful.',
     });
   } catch (error) {
     console.log("Error in signup controller", error.message);
@@ -69,39 +81,59 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-	try {
-		const { username, password } = req.body;
-		const user = await User.findOne({ username });
+  try {
+    const { username, email, password } = req.body;
 
-		if (!user) {
-			return res.status(400).json({ error: "Invalid username or password" });
-		}
+    // Ensure that either username or email, and password are provided
+    if ((!username && !email) || !password) {
+      return res.status(400).json({ error: "Please provide either a username or email, and password." });
+    }
 
-		const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    // Find user by either username or email
+    let user;
+    if (username) {
+      user = await User.findOne({ username });
+    } else if (email) {
+      user = await User.findOne({ email });
+    }
 
-		if (!isPasswordCorrect) {
-			return res.status(400).json({ error: "Invalid username or password" });
-		}
+    // If user is not found
+    if (!user) {
+      return res.status(400).json({ error: "Invalid username/email or password." });
+    }
 
-		if (user.roleRequestStatus !== 'approved') {
-			return res.status(403).json({ error: 'Your role request is pending approval.' });
-		}
+    // Check if password is correct
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid username/email or password." });
+    }
 
-		generateTokenAndSetCookie(user._id, res);
+    // Check if role request is approved
+    if (user.roleRequestStatus !== 'approved') {
+      return res.status(403).json({ error: 'Your role request is pending approval.' });
+    }
 
-		res.status(200).json({
-			_id: user._id,
-			fullName: user.fullName,
-			username: user.username,
-			role: user.role, // Ensure this line includes the role
+    // Generate token and set cookie
+    generateTokenAndSetCookie(user._id, res);
 
-			profilePic: user.profilePic,
-		});
-	} catch (error) {
-		console.log("Error in login controller", error.message);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
+    // Send response back to the client
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login controller:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
+
+
+
+
 
 export const logout = (req, res) => {
 	try {

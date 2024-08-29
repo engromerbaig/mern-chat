@@ -7,27 +7,50 @@ import { io } from '../socket/socket.js'; // Import the Socket.IO instance
 
 export const createSuperAdmin = async (req, res) => {
   try {
-    const { fullName, username, password, gender } = req.body;
+    const { fullName, username, email, password, gender } = req.body;
 
-    if (!fullName || !username || !password || !gender) {
+    // Check for missing required fields
+    if (!fullName || !username || !email || !password || !gender) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Email validation (using the same regex as the model)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format." });
+    }
+
+    // Check if a Super Admin already exists
     const existingAdmin = await User.findOne({ role: 'Super Admin' });
     if (existingAdmin) {
       return res.status(400).json({ error: 'Super Admin already exists' });
     }
 
+    // Check if username or email is already in use
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      if (existingUser.username === username) {
+        return res.status(400).json({ error: 'Username already exists.' });
+      }
+      if (existingUser.email === email) {
+        return res.status(400).json({ error: 'Email already exists.' });
+      }
+    }
+
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Set the profile picture based on gender
     const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
     const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
     const profilePic = gender === 'male' ? boyProfilePic : girlProfilePic;
 
+    // Create the new Super Admin
     const newSuperAdmin = new User({
       fullName,
       username,
+      email,  // Include the email field
       password: hashedPassword,
       gender,
       profilePic,
@@ -35,12 +58,15 @@ export const createSuperAdmin = async (req, res) => {
       roleRequestStatus: 'approved',
     });
 
+    // Save to database
     await newSuperAdmin.save();
 
+    // Respond with success
     res.status(201).json({
       _id: newSuperAdmin._id,
       fullName: newSuperAdmin.fullName,
       username: newSuperAdmin.username,
+      email: newSuperAdmin.email,  // Include the email in the response
       profilePic: newSuperAdmin.profilePic,
       role: newSuperAdmin.role,
       message: 'Super Admin created successfully',
