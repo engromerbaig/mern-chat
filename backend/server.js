@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import adminRoutes from './routes/admin.routes.js';
+import uploadTestRoutes from './routes/uploadTest.routes.js';
 
 import connectToMongoDB from "./db/connectToMongoDB.js";
 import { app, server } from "./socket/socket.js";
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/admin', adminRoutes); // Updated admin route to follow /api path structure
+app.use('/api/upload', uploadTestRoutes);
 
 // Serve static files from frontend build directory
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
