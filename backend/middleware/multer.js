@@ -1,3 +1,4 @@
+// backend\middleware\multer.js
 import multer from 'multer';
 
 // Use memory storage so the file is stored as a buffer in memory

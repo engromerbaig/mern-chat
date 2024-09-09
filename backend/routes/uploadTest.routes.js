@@ -1,3 +1,4 @@
+// backend\routes\uploadTest.routes.js
 import express from 'express';
 import { upload } from '../middleware/multer.js';  // Multer middleware
 import { uploadOnCloudinary } from '../utils/uploadOnCloudinary.js';  // Cloudinary utility
