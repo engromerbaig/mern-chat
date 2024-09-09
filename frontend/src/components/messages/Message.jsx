@@ -2,28 +2,52 @@ import { useAuthContext } from "../../context/AuthContext";
 import { extractTime } from "../../utils/extractTime";
 import useConversation from "../../zustand/useConversation";
 
-const Message = ({ message }) => {
-	const { authUser } = useAuthContext();
-	const { selectedConversation } = useConversation();
-	const fromMe = message.senderId === authUser._id;
-	const formattedTime = extractTime(message.createdAt);
-	const chatClassName = fromMe ? "chat-end" : "chat-start";
-	const profilePic = fromMe ? authUser.profilePic : selectedConversation?.profilePic;
-	const bubbleBgColor = fromMe ? "bg-blue-500" : "";
-
-	const shakeClass = message.shouldShake ? "shake" : "";
-
-	return (
-		<div className={`chat ${chatClassName}`}>
-			<div className='chat-image avatar'>
-				<div className='w-10 rounded-full'>
-					<img alt='Tailwind CSS chat bubble component' src={profilePic} />
-				</div>
-			</div>
-			<div className={`chat-bubble text-white ${bubbleBgColor} ${shakeClass} pb-2 max-w-[80%] break-words`}>
-{message.message}</div>
-			<div className='chat-footer text-white text-xs flex gap-1 items-center'>{formattedTime}</div>
-		</div>
-	);
+// Helper function to extract file name from URL
+const getFileName = (url) => {
+  return url.substring(url.lastIndexOf("/") + 1);  // Extract filename from URL
 };
+
+const Message = ({ message }) => {
+  const { authUser } = useAuthContext();
+  const { selectedConversation } = useConversation();
+  const fromMe = message.senderId === authUser._id;
+  const formattedTime = extractTime(message.createdAt);
+  const chatClassName = fromMe ? "chat-end" : "chat-start";
+  const profilePic = fromMe ? authUser.profilePic : selectedConversation?.profilePic;
+  const bubbleBgColor = fromMe ? "bg-blue-500" : "";
+  const shakeClass = message.shouldShake ? "shake" : "";
+
+  return (
+    <div className={`chat ${chatClassName}`}>
+      {/* User profile picture */}
+      <div className="chat-image avatar">
+        <div className="w-10 rounded-full">
+          <img alt="Tailwind CSS chat bubble component" src={profilePic} />
+        </div>
+      </div>
+
+      {/* Message bubble */}
+      <div className={`chat-bubble text-white ${bubbleBgColor} ${shakeClass} pb-2 max-w-[80%] break-words`}>
+        {/* Check if message contains a file */}
+        {message.fileUrl ? (
+          <a
+            href={message.fileUrl}
+            download={getFileName(message.fileUrl)}
+            className="underline text-blue-300 hover:text-blue-100"
+          >
+            {getFileName(message.fileUrl)}
+          </a>
+        ) : (
+          message.message  // Render the text message if no file
+        )}
+      </div>
+
+      {/* Message footer (time) */}
+      <div className="chat-footer text-white text-xs flex gap-1 items-center">
+        {formattedTime}
+      </div>
+    </div>
+  );
+};
+
 export default Message;
