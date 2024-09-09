@@ -1,3 +1,4 @@
+// frontend/src/components/messages/MessageInput.jsx
 import { useState } from "react";
 import { BsSend } from "react-icons/bs";
 import useSendMessage from "../../hooks/useSendMessage";
