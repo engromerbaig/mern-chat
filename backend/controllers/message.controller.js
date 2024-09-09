@@ -12,10 +12,10 @@ export const sendMessage = async (req, res) => {
   
 	  let fileUrl = null;
 	  if (req.file) {
-		const localFilePath = req.file.path;
-		const cloudinaryResult = await uploadOnCloudinary(localFilePath);
+		const fileBuffer = req.file.buffer;  // Get file buffer
+		const cloudinaryResult = await uploadOnCloudinary(fileBuffer);  // Upload to Cloudinary
 		if (cloudinaryResult) {
-		  fileUrl = cloudinaryResult.secure_url;
+		  fileUrl = cloudinaryResult;  // Get secure URL from Cloudinary
 		}
 	  }
   
@@ -34,8 +34,8 @@ export const sendMessage = async (req, res) => {
 	  const newMessage = new Message({
 		senderId,
 		receiverId,
-		message: message || "", // Text message
-		fileUrl, // Media file
+		message: message || "",  // Text message
+		fileUrl,                 // Media file URL from Cloudinary
 	  });
   
 	  if (newMessage) {
@@ -51,6 +51,7 @@ export const sendMessage = async (req, res) => {
 	  res.status(500).json({ error: 'Internal server error' });
 	}
   };
+  
   
 
 export const getMessages = async (req, res) => {
