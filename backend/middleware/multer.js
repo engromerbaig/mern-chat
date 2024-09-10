@@ -6,7 +6,7 @@ const storage = multer.memoryStorage();
 
 // Define a file filter for allowed file types
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp3|wav|csv/;
+  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp3|csv|wav/;
   const extname = allowedTypes.test(file.originalname.toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
