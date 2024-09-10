@@ -17,7 +17,7 @@ const Message = ({ message }) => {
       {/* User profile picture */}
       <div className="chat-image avatar">
         <div className="w-10 rounded-full">
-          <img alt="Tailwind CSS chat bubble component" src={profilePic} />
+          <img alt="User avatar" src={profilePic} />
         </div>
       </div>
 
@@ -26,8 +26,8 @@ const Message = ({ message }) => {
         {/* Check if message contains a file */}
         {message.fileUrl ? (
           <a
-            href={message.fileUrl}
-            download={message.originalFileName}  // Use the original file name for download
+            href={message.fileUrl}   // URL to the file stored in Cloudinary
+            download={message.originalFileName}  // Set the original file name for download
             className="underline text-blue-300 hover:text-blue-100"
           >
             {message.originalFileName}  {/* Display the original file name */}
