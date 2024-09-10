@@ -1,12 +1,15 @@
-// frontend/src/components/messages/MessageInput.jsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { BsSend } from "react-icons/bs";
+import { FaPaperclip } from "react-icons/fa";  // Import file icon
 import useSendMessage from "../../hooks/useSendMessage";
 
 const MessageInput = () => {
   const [message, setMessage] = useState("");  // Message state
   const [file, setFile] = useState(null);      // File state
   const { loading, sendMessage } = useSendMessage();
+
+  // Create a reference for the hidden file input
+  const fileInputRef = useRef(null);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -23,9 +26,14 @@ const MessageInput = () => {
     setFile(e.target.files[0]);  // Set selected file in state
   };
 
+  // Trigger the hidden file input when the file icon is clicked
+  const handleFileIconClick = () => {
+    fileInputRef.current.click();  // Programmatically click the hidden file input
+  };
+
   return (
     <form className='px-4 my-3' onSubmit={handleSubmit}>
-      <div className='w-full relative'>
+      <div className='w-full relative flex items-center'>
         <input
           type='text'
           className='border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 text-white'
@@ -34,18 +42,28 @@ const MessageInput = () => {
           onChange={(e) => setMessage(e.target.value)}
         />
 
-        {/* File Input for uploading files */}
-        <input 
+        {/* Hidden File Input */}
+        <input
           type="file"
-          className="block w-full mt-2"
+          ref={fileInputRef}  // Reference to the file input
+          className="hidden"
           onChange={handleFileChange}
         />
 
-        {/* Display selected file name (optional) */}
+        {/* Display selected file name */}
         {file && <div className="text-white text-sm mt-2">Selected file: {file.name}</div>}
 
+        {/* File Icon for uploading files */}
+        <button
+          type="button"
+          className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
+          onClick={handleFileIconClick}  // Trigger file input click
+        >
+          <FaPaperclip size={18} />
+        </button>
+
         {/* Send Button */}
-        <button type='submit' className='absolute inset-y-0 end-0 flex items-center pe-3'>
+        <button type='submit' className='absolute inset-y-0 right-0 flex items-center pr-3'>
           {loading ? (
             <div className='loading loading-spinner'></div>
           ) : (
