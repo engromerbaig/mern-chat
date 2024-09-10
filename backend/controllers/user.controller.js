@@ -1,3 +1,4 @@
+// controllers/user.controller.js
 import User from "../models/user.model.js";
 import Conversation from "../models/conversation.model.js";
 import { canInitiateChat } from "../utils/rolePermissions.js"; 
