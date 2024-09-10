@@ -26,8 +26,7 @@ const Message = ({ message }) => {
         {/* Check if message contains a file */}
         {message.fileUrl ? (
           <a
-            href={message.fileUrl}   // URL to the file stored in Cloudinary
-            download={message.originalFileName}  // Set the original file name for download
+            href={`/api/messages/download/${message._id}`}  // Link to the backend download route
             className="underline text-blue-300 hover:text-blue-100"
           >
             {message.originalFileName}  {/* Display the original file name */}
