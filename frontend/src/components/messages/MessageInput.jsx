@@ -52,7 +52,7 @@ const MessageInput = () => {
 
         {/* Conditionally display file count or paperclip icon */}
         {file ? (
-          <div className="absolute inset-y-0 right-16 flex items-center">
+          <div className="absolute inset-y-0 right-10 flex items-center">
             <div className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex justify-center items-center">
               1  {/* Always 1 because only one file is allowed */}
             </div>
