@@ -50,17 +50,22 @@ const MessageInput = () => {
           onChange={handleFileChange}
         />
 
-        {/* Display selected file name */}
-        {file && <div className="text-white text-sm mt-2">Selected file: {file.name}</div>}
-
-        {/* File Icon for uploading files */}
-        <button
-          type="button"
-          className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
-          onClick={handleFileIconClick}  // Trigger file input click
-        >
-          <FaPaperclip size={18} />
-        </button>
+        {/* Conditionally display file count or paperclip icon */}
+        {file ? (
+          <div className="absolute inset-y-0 right-16 flex items-center">
+            <div className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex justify-center items-center">
+              1  {/* Always 1 because only one file is allowed */}
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
+            onClick={handleFileIconClick}  // Trigger file input click
+          >
+            <FaPaperclip size={18} />
+          </button>
+        )}
 
         {/* Send Button */}
         <button type='submit' className='absolute inset-y-0 right-0 flex items-center pr-3'>
