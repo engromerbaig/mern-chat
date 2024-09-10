@@ -29,17 +29,22 @@ export const getUsersForSidebar = async (req, res) => {
             participants: currentUserId
         }).populate('participants'); // Populate participants to get user details
 
-        // Extract participants from conversations
+        // Extract participants from conversations, excluding the current user
         const conversationParticipants = existingConversations.flatMap(conversation =>
             conversation.participants.filter(participant => participant._id.toString() !== currentUserId.toString())
         );
 
-        // Ensure uniqueness by converting to a Set based on user IDs
-        const uniqueConversationParticipants = Array.from(new Set(conversationParticipants.map(p => p._id.toString())))
-            .map(id => conversationParticipants.find(p => p._id.toString() === id));
+        // Use a Map to ensure uniqueness based on user _id
+        const uniqueUsersMap = new Map();
 
-        // Merge filteredUsers and conversationParticipants to ensure all relevant users are included
-        const mergedUsers = [...new Set([...filteredUsers, ...uniqueConversationParticipants])];
+        // Add filtered users to the map
+        filteredUsers.forEach(user => uniqueUsersMap.set(user._id.toString(), user));
+
+        // Add conversation participants to the map (will overwrite duplicates)
+        conversationParticipants.forEach(user => uniqueUsersMap.set(user._id.toString(), user));
+
+        // Convert the Map values back into an array (unique users)
+        const mergedUsers = Array.from(uniqueUsersMap.values());
 
         // Group users by role
         const groupedUsers = mergedUsers.reduce((acc, user) => {
