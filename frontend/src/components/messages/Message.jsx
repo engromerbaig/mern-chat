@@ -2,11 +2,6 @@ import { useAuthContext } from "../../context/AuthContext";
 import { extractTime } from "../../utils/extractTime";
 import useConversation from "../../zustand/useConversation";
 
-// Helper function to extract file name from URL
-const getFileName = (url) => {
-  return url.substring(url.lastIndexOf("/") + 1);  // Extract filename from URL
-};
-
 const Message = ({ message }) => {
   const { authUser } = useAuthContext();
   const { selectedConversation } = useConversation();
@@ -32,10 +27,10 @@ const Message = ({ message }) => {
         {message.fileUrl ? (
           <a
             href={message.fileUrl}
-            download={getFileName(message.fileUrl)}
+            download={message.originalFileName}  // Use the original file name for download
             className="underline text-blue-300 hover:text-blue-100"
           >
-            {getFileName(message.fileUrl)}
+            {message.originalFileName}  {/* Display the original file name */}
           </a>
         ) : (
           message.message  // Render the text message if no file

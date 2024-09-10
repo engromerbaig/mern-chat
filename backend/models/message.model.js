@@ -1,4 +1,3 @@
-// backend/models/message.model.js
 import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema(
@@ -19,7 +18,11 @@ const messageSchema = new mongoose.Schema(
     },
     fileUrl: {
       type: String,
-      default: null, // To store the URL of the file if uploaded
+      default: null,  // To store the Cloudinary URL
+    },
+    originalFileName: {
+      type: String,
+      default: null,  // To store the original file name from the user's local system
     },
   },
   { timestamps: true }

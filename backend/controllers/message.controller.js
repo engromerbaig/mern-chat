@@ -1,7 +1,6 @@
-// backend/controllers/message.controller.js
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
-import { getReceiverSocketId, io } from "../socket/socket.js";  // Make sure to use the socket utilities
+import { getReceiverSocketId, io } from "../socket/socket.js";
 import { uploadOnCloudinary } from '../utils/uploadOnCloudinary.js';
 
 export const sendMessage = async (req, res) => {
@@ -11,11 +10,14 @@ export const sendMessage = async (req, res) => {
     const senderId = req.user._id;
 
     let fileUrl = null;
+    let originalFileName = null;  // New field for original file name
+
     if (req.file) {
-      const fileBuffer = req.file.buffer;  // Get file buffer
+      const fileBuffer = req.file.buffer;  // Get file buffer from multer
       const cloudinaryResult = await uploadOnCloudinary(fileBuffer);  // Upload to Cloudinary
       if (cloudinaryResult) {
-        fileUrl = cloudinaryResult;  // Get secure URL from Cloudinary
+        fileUrl = cloudinaryResult;  // Get Cloudinary URL
+        originalFileName = req.file.originalname;  // Capture original file name from Multer
       }
     }
 
@@ -35,7 +37,8 @@ export const sendMessage = async (req, res) => {
       senderId,
       receiverId,
       message: message || "",  // Text message
-      fileUrl,                 // Media file URL from Cloudinary
+      fileUrl,                 // Cloudinary URL
+      originalFileName,        // Original file name from Multer
     });
 
     if (newMessage) {
@@ -45,9 +48,9 @@ export const sendMessage = async (req, res) => {
     await Promise.all([conversation.save(), newMessage.save()]);
 
     // Emit the message to both sender and receiver
-    const receiverSocketId = getReceiverSocketId(receiverId);  // Retrieve receiver socket ID
-    io.to(receiverSocketId).emit("newMessage", newMessage);    // Emit the message to the receiver
-    io.to(req.user.socketId).emit("newMessage", newMessage);   // Emit the message to the sender
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    io.to(receiverSocketId).emit("newMessage", newMessage);
+    io.to(req.user.socketId).emit("newMessage", newMessage);
 
     // Send response to the sender
     res.status(201).json(newMessage);
@@ -56,6 +59,8 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
   
 
