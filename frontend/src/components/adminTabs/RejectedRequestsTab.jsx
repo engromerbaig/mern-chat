@@ -1,3 +1,4 @@
+//  frontend/src/components/adminTabs/RejectedRequestsTab.jsx
 import React from 'react';
 import { formatDateAndTime } from '../../utils/extractTime';
 
