@@ -1,4 +1,3 @@
-// components/Conversations.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Conversation from './Conversation';
@@ -8,7 +7,6 @@ import { useAuthContext } from '../../context/AuthContext';
 const Conversations = () => {
     const [loading, setLoading] = useState(true);
     const [groupedUsers, setGroupedUsers] = useState({});
-    const { onlineUsers } = useSocketContext();
     const { _id: currentUserId } = useAuthContext(); // Get the current user's ID
 
     useEffect(() => {
@@ -33,14 +31,11 @@ const Conversations = () => {
         return [...acc, ...groupedUsers[role].map(user => ({ ...user, role }))];
     }, []);
 
-    // Sort users with online users first
+    // Sort users by most recent message timestamp
     const sortedUsers = flattenedUsers.sort((a, b) => {
-        const isAOnline = onlineUsers.includes(a._id);
-        const isBOnline = onlineUsers.includes(b._id);
-
-        if (isAOnline && !isBOnline) return -1; // a should come before b
-        if (!isAOnline && isBOnline) return 1;  // b should come before a
-        return 0; // maintain original order if both are either online or offline
+        const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
+        const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
+        return bTimestamp - aTimestamp; // Sort in descending order (most recent first)
     });
 
     // Get distinct roles
