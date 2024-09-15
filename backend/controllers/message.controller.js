@@ -40,58 +40,50 @@ export const downloadFile = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { message } = req.body;
-    const { id: receiverId } = req.params;
-    const senderId = req.user._id;
+      const { message } = req.body;
+      const { id: receiverId } = req.params;
+      const senderId = req.user._id;
 
-    let fileUrl = null;
-    let originalFileName = null;  // New field for original file name
-
-    if (req.file) {
-      const fileBuffer = req.file.buffer;  // Get file buffer from multer
-      const cloudinaryResult = await uploadOnCloudinary(fileBuffer);  // Upload to Cloudinary
-      if (cloudinaryResult) {
-        fileUrl = cloudinaryResult;  // Get Cloudinary URL
-        originalFileName = req.file.originalname;  // Capture original file name from Multer
-      }
-    }
-
-    // Check if a conversation exists or create a new one
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
-    });
-
-    if (!conversation) {
-      conversation = await Conversation.create({
-        participants: [senderId, receiverId],
+      let conversation = await Conversation.findOne({
+          participants: { $all: [senderId, receiverId] },
       });
-    }
 
-    // Create a new message
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      message: message || "",  // Text message
-      fileUrl,                 // Cloudinary URL
-      originalFileName,        // Original file name from Multer
-    });
+      if (!conversation) {
+          conversation = await Conversation.create({
+              participants: [senderId, receiverId],
+          });
+      }
 
-    if (newMessage) {
-      conversation.messages.push(newMessage._id);
-    }
+      const newMessage = new Message({
+          senderId,
+          receiverId,
+          message,
+      });
 
-    await Promise.all([conversation.save(), newMessage.save()]);
+      if (newMessage) {
+          conversation.messages.push(newMessage._id);
+      }
 
-    // Emit the message to both sender and receiver
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    io.to(receiverSocketId).emit("newMessage", newMessage);
-    io.to(req.user.socketId).emit("newMessage", newMessage);
+      await Promise.all([conversation.save(), newMessage.save()]);
 
-    // Send response to the sender
-    res.status(201).json(newMessage);
+      // SOCKET IO FUNCTIONALITY
+      const receiverSocketId = getReceiverSocketId(receiverId);
+      if (receiverSocketId) {
+          // Send message to receiver
+          io.to(receiverSocketId).emit("newMessage", newMessage);
+          
+          // Emit an event to update the sidebar for all connected clients
+          io.emit("updateSidebar", {
+              senderId,
+              receiverId,
+              message: newMessage,
+          });
+      }
+
+      res.status(201).json(newMessage);
   } catch (error) {
-    console.error("Error in sendMessage controller: ", error.message);
-    res.status(500).json({ error: 'Internal server error' });
+      console.error("Error in sendMessage controller: ", error.message);
+      res.status(500).json({ error: "Internal server error" });
   }
 };
 

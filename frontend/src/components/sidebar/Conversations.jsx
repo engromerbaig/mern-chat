@@ -7,13 +7,14 @@ import { useAuthContext } from '../../context/AuthContext';
 const Conversations = () => {
     const [loading, setLoading] = useState(true);
     const [groupedUsers, setGroupedUsers] = useState({});
-    const { _id: currentUserId } = useAuthContext(); // Get the current user's ID
+    const { socket } = useSocketContext();
+    const { _id: currentUserId } = useAuthContext();
 
     useEffect(() => {
         const fetchGroupedUsers = async () => {
             try {
                 const response = await axios.get('/api/users', {
-                    params: { currentUserId } // Send the current user ID as a query parameter
+                    params: { currentUserId }
                 });
                 setGroupedUsers(response.data);
             } catch (error) {
@@ -24,21 +25,73 @@ const Conversations = () => {
         };
 
         fetchGroupedUsers();
-    }, [currentUserId]);
 
-    // Flatten the grouped users into a list for sorting
+        if (socket) {
+            socket.on("updateSidebar", ({ senderId, receiverId, message }) => {
+                setGroupedUsers((prevGroupedUsers) => {
+                    const updatedGroupedUsers = { ...prevGroupedUsers };
+                    const targetUserId = senderId === currentUserId ? receiverId : senderId;
+
+                    for (const role in updatedGroupedUsers) {
+                        const userIndex = updatedGroupedUsers[role].findIndex(
+                            (user) => user._id === targetUserId
+                        );
+
+                        if (userIndex !== -1) {
+                            const updatedUser = {
+                                ...updatedGroupedUsers[role][userIndex],
+                                lastMessageTimestamp: message.createdAt,
+                                unreadMessages: (updatedGroupedUsers[role][userIndex].unreadMessages || 0) + 1,
+                            };
+
+                            updatedGroupedUsers[role].splice(userIndex, 1);
+                            updatedGroupedUsers[role].unshift(updatedUser);
+                            break;
+                        }
+                    }
+
+                    return updatedGroupedUsers;
+                });
+            });
+
+            socket.on("messageRead", ({ conversationId }) => {
+                setGroupedUsers((prevGroupedUsers) => {
+                    const updatedGroupedUsers = { ...prevGroupedUsers };
+
+                    for (const role in updatedGroupedUsers) {
+                        const userIndex = updatedGroupedUsers[role].findIndex(
+                            (user) => user._id === conversationId
+                        );
+
+                        if (userIndex !== -1) {
+                            updatedGroupedUsers[role][userIndex].unreadMessages = 0;
+                            break;
+                        }
+                    }
+
+                    return updatedGroupedUsers;
+                });
+            });
+        }
+
+        return () => {
+            if (socket) {
+                socket.off("updateSidebar");
+                socket.off("messageRead");
+            }
+        };
+    }, [currentUserId, socket]);
+
     const flattenedUsers = Object.keys(groupedUsers).reduce((acc, role) => {
         return [...acc, ...groupedUsers[role].map(user => ({ ...user, role }))];
     }, []);
 
-    // Sort users by most recent message timestamp
     const sortedUsers = flattenedUsers.sort((a, b) => {
         const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
         const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
-        return bTimestamp - aTimestamp; // Sort in descending order (most recent first)
+        return bTimestamp - aTimestamp;
     });
 
-    // Get distinct roles
     const roles = Object.keys(groupedUsers);
 
     return (
@@ -51,6 +104,7 @@ const Conversations = () => {
                             key={user._id}
                             conversation={user}
                             lastIdx={idx === sortedUsers.filter(u => u.role === role).length - 1}
+                            unreadMessages={user.unreadMessages}
                         />
                     ))}
                 </div>
