@@ -65,6 +65,14 @@ io.on("connection", (socket) => {
 			console.error("Error marking messages as read:", error);
 		}
 	});
+
+	// Backend Socket Handling
+
+// When a new message is sent, emit 'updateSidebar' for both sender and receiver
+socket.on("newMessage", ({ senderId, receiverId, message }) => {
+    io.to([senderId, receiverId]).emit("updateSidebar", { senderId, receiverId, message });
+});
+
 	
 });
 

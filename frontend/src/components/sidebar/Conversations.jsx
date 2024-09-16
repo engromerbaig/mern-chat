@@ -3,7 +3,7 @@ import axios from 'axios';
 import Conversation from './Conversation';
 import { useSocketContext } from '../../context/SocketContext';
 import { useAuthContext } from '../../context/AuthContext';
-import useConversation from '../../zustand/useConversation';  // Assuming you're using Zustand for conversation state
+import useConversation from '../../zustand/useConversation';  // Zustand for managing selected conversation
 
 const Conversations = () => {
     const [loading, setLoading] = useState(true);
@@ -29,12 +29,15 @@ const Conversations = () => {
         fetchGroupedUsers();
 
         if (socket) {
-            // Handle new message update
+            // Handle new message update for any conversation
             socket.on("updateSidebar", ({ senderId, receiverId, message }) => {
+                const targetUserId = senderId === currentUserId ? receiverId : senderId;
+
+                // Update conversations to make sure that we handle all of them
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
-                    const targetUserId = senderId === currentUserId ? receiverId : senderId;
 
+                    // Loop over roles
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === targetUserId
@@ -43,16 +46,16 @@ const Conversations = () => {
                         if (userIndex !== -1) {
                             const isConversationSelected = selectedConversation && selectedConversation._id === targetUserId;
 
-                            // Clone user data
+                            // Clone user data and update their last message and unreadMessages
                             const updatedUser = {
                                 ...updatedGroupedUsers[role][userIndex],
                                 lastMessageTimestamp: message.createdAt,
                                 unreadMessages: isConversationSelected 
-                                    ? 0  // No unread messages if the chat is currently open
+                                    ? 0  // If the conversation is open, mark as read
                                     : (updatedGroupedUsers[role][userIndex].unreadMessages || 0) + 1,
                             };
 
-                            // Move user to the top of the list
+                            // Move the updated user to the top of their role's list
                             const updatedRoleUsers = [...updatedGroupedUsers[role]];
                             updatedRoleUsers.splice(userIndex, 1); // Remove from old position
                             updatedRoleUsers.unshift(updatedUser);  // Move to top
