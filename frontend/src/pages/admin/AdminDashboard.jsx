@@ -1,3 +1,4 @@
+// frontend/src/pages/admin/AdminDashboard.jsx
 import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
