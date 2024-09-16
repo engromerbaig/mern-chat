@@ -50,6 +50,22 @@ io.on("connection", (socket) => {
     socket.on("requestStatusChange", (changeType) => {
         io.emit("requestStatusChange", changeType);
     });
+
+	socket.on("markMessageAsRead", async ({ conversationId }) => {
+		try {
+			// Assuming you're marking all messages in the conversation as read
+			await Message.updateMany(
+				{ conversationId, read: false },
+				{ $set: { read: true } }
+			);
+	
+			// Broadcast to all clients that the messages in this conversation are read
+			socket.broadcast.emit("messageRead", { conversationId });
+		} catch (error) {
+			console.error("Error marking messages as read:", error);
+		}
+	});
+	
 });
 
 export { app, io, server };
