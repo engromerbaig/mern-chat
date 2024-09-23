@@ -7,35 +7,40 @@ import useConversation from '../../zustand/useConversation';
 
 const Conversations = () => {
     const [loading, setLoading] = useState(true);
-    const [groupedUsers, setGroupedUsers] = useState({});
+    const [groupedUsers, setGroupedUsers] = useState({}); // Grouped users by role
     const { socket } = useSocketContext();
     const { _id: currentUserId } = useAuthContext();
     const { selectedConversation } = useConversation();
 
     useEffect(() => {
-        const fetchGroupedUsers = async () => {
+        const fetchUsers = async () => {
             try {
                 const response = await axios.get('/api/users', {
                     params: { currentUserId }
                 });
-                setGroupedUsers(response.data);
+
+                if (response.data && typeof response.data === 'object') {
+                    setGroupedUsers(response.data); // Set grouped users
+                } else {
+                    console.error("Unexpected API response format");
+                }
             } catch (error) {
-                console.error("Error fetching grouped users", error);
+                console.error("Error fetching users", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchGroupedUsers();
+        fetchUsers();
 
         if (socket) {
-            // Handle new message update for any conversation
             socket.on("updateSidebar", ({ senderId, receiverId, message }) => {
                 const targetUserId = senderId === currentUserId ? receiverId : senderId;
 
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
 
+                    // Loop through roles and update the relevant user
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === targetUserId
@@ -52,12 +57,17 @@ const Conversations = () => {
                                     : (updatedGroupedUsers[role][userIndex].unreadMessages || 0) + 1,
                             };
 
-                            // Move the updated user to the top of their respective role's list
-                            const updatedRoleUsers = [...updatedGroupedUsers[role]];
-                            updatedRoleUsers.splice(userIndex, 1);
-                            updatedRoleUsers.unshift(updatedUser);
+                            // Remove user from the list and move to the top of their respective role's list
+                            updatedGroupedUsers[role].splice(userIndex, 1);
+                            updatedGroupedUsers[role].unshift(updatedUser);
 
-                            updatedGroupedUsers[role] = updatedRoleUsers;
+                            // Re-sort the users within their role based on the latest message
+                            updatedGroupedUsers[role] = updatedGroupedUsers[role].sort((a, b) => {
+                                const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
+                                const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
+                                return bTimestamp - aTimestamp;
+                            });
+
                             break;
                         }
                     }
@@ -66,11 +76,11 @@ const Conversations = () => {
                 });
             });
 
-            // Listen for the "messageRead" event to unhighlight conversations when messages are read
             socket.on("messageRead", ({ conversationId }) => {
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
 
+                    // Loop through roles and find the relevant user
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === conversationId
@@ -82,15 +92,13 @@ const Conversations = () => {
                                 unreadMessages: 0,  // Reset unread messages to 0
                             };
 
-                            const updatedRoleUsers = [...updatedGroupedUsers[role]];
-                            updatedRoleUsers[userIndex] = updatedUser;
+                            updatedGroupedUsers[role][userIndex] = updatedUser;
 
-                            updatedGroupedUsers[role] = updatedRoleUsers;
-                            break;
+                            return updatedGroupedUsers;
                         }
                     }
 
-                    return updatedGroupedUsers;
+                    return prevGroupedUsers;
                 });
             });
         }
@@ -103,32 +111,23 @@ const Conversations = () => {
         };
     }, [currentUserId, socket, selectedConversation]);
 
-    // Sort users within their roles based on lastMessageTimestamp
-    const sortedGroupedUsers = Object.keys(groupedUsers).reduce((acc, role) => {
-        const sortedRoleUsers = [...groupedUsers[role]].sort((a, b) => {
-            const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
-            const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
-            return bTimestamp - aTimestamp;
-        });
-        acc[role] = sortedRoleUsers;
-        return acc;
-    }, {});
-
-    const roles = Object.keys(sortedGroupedUsers);
+    const roles = Object.keys(groupedUsers);
 
     return (
         <div className='py-2 flex flex-col overflow-auto'>
             {roles.map(role => (
                 <div key={role}>
-                    {/* Only display the group name once, even if multiple users from the same group have recent messages */}
-                    <div className='font-bold divider text-base text-white'>{role}</div>
-                    {sortedGroupedUsers[role].map((user, idx) => (
-                        <Conversation
-                            key={user._id}
-                            conversation={user}
-                            lastIdx={idx === sortedGroupedUsers[role].length - 1}
-                            unreadMessages={user.unreadMessages}
-                        />
+                    {/* Role will appear for each section of grouped users */}
+                    {groupedUsers[role].map((user, idx) => (
+                        <React.Fragment key={user._id}>
+                            {idx === 0 && <div className='font-bold divider text-base text-white'>{role}</div>}
+                            <Conversation
+                                key={user._id}
+                                conversation={user}
+                                lastIdx={idx === groupedUsers[role].length - 1}
+                                unreadMessages={user.unreadMessages}
+                            />
+                        </React.Fragment>
                     ))}
                 </div>
             ))}

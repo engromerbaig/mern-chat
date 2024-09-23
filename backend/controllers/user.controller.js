@@ -1,8 +1,7 @@
-// controllers/user.controller.js
 import User from "../models/user.model.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
-import { canInitiateChat } from "../utils/rolePermissions.js"; 
+import { canInitiateChat } from "../utils/rolePermissions.js";
 
 export const getUsersForSidebar = async (req, res) => {
     try {
@@ -30,21 +29,26 @@ export const getUsersForSidebar = async (req, res) => {
         const existingConversations = await Conversation.find({
             participants: currentUserId
         })
-        .populate('participants')
+        .populate('participants', '_id role fullName profilePic') // Only populate necessary fields
         .populate({
             path: 'messages',
-            options: { sort: { createdAt: -1 }, limit: 1 }
-        }); 
+            options: { sort: { createdAt: -1 }, limit: 1 }, // Get the latest message only
+            select: 'createdAt senderId receiverId isRead'
+        });
 
         // Extract participants from conversations, excluding the current user
         const conversationParticipants = existingConversations.flatMap(conversation => {
+            // Get the latest message in the conversation
+            const latestMessage = conversation.messages[0] || null;
+
             const otherParticipants = conversation.participants.filter(
                 participant => participant._id.toString() !== currentUserId.toString()
             );
+
             return otherParticipants.map(participant => ({
                 ...participant.toObject(),
-                lastMessageTimestamp: conversation.messages[0]?.createdAt || conversation.updatedAt,
-                unreadMessages: conversation.messages.filter(msg => msg.receiverId.toString() === currentUserId.toString() && !msg.isRead).length
+                lastMessageTimestamp: latestMessage ? latestMessage.createdAt : conversation.updatedAt,
+                unreadMessages: latestMessage && latestMessage.receiverId.toString() === currentUserId.toString() && !latestMessage.isRead ? 1 : 0
             }));
         });
 
@@ -52,7 +56,11 @@ export const getUsersForSidebar = async (req, res) => {
         const uniqueUsersMap = new Map();
 
         // Add filtered users to the map
-        filteredUsers.forEach(user => uniqueUsersMap.set(user._id.toString(), { ...user.toObject(), lastMessageTimestamp: null, unreadMessages: 0 }));
+        filteredUsers.forEach(user => uniqueUsersMap.set(user._id.toString(), { 
+            ...user.toObject(), 
+            lastMessageTimestamp: null, 
+            unreadMessages: 0 
+        }));
 
         // Add conversation participants to the map (will overwrite duplicates)
         conversationParticipants.forEach(user => uniqueUsersMap.set(user._id.toString(), user));
