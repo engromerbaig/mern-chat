@@ -25,25 +25,25 @@ const Conversations = () => {
                 setLoading(false);
             }
         };
-    
+
         fetchGroupedUsers();
-    
+
         if (socket) {
             // Handle new message update for any conversation
             socket.on("updateSidebar", ({ senderId, receiverId, message }) => {
                 const targetUserId = senderId === currentUserId ? receiverId : senderId;
-    
+
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
-    
+
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === targetUserId
                         );
-    
+
                         if (userIndex !== -1) {
                             const isConversationSelected = selectedConversation && selectedConversation._id === targetUserId;
-    
+
                             const updatedUser = {
                                 ...updatedGroupedUsers[role][userIndex],
                                 lastMessageTimestamp: message.createdAt,
@@ -51,50 +51,50 @@ const Conversations = () => {
                                     ? 0  
                                     : (updatedGroupedUsers[role][userIndex].unreadMessages || 0) + 1,
                             };
-    
+
+                            // Move the updated user to the top of their respective role's list
                             const updatedRoleUsers = [...updatedGroupedUsers[role]];
                             updatedRoleUsers.splice(userIndex, 1);
-                            // Move user to the top of the list
                             updatedRoleUsers.unshift(updatedUser);
-    
+
                             updatedGroupedUsers[role] = updatedRoleUsers;
                             break;
                         }
                     }
-    
+
                     return updatedGroupedUsers;
                 });
             });
-    
+
             // Listen for the "messageRead" event to unhighlight conversations when messages are read
             socket.on("messageRead", ({ conversationId }) => {
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
-    
+
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === conversationId
                         );
-    
+
                         if (userIndex !== -1) {
                             const updatedUser = {
                                 ...updatedGroupedUsers[role][userIndex],
                                 unreadMessages: 0,  // Reset unread messages to 0
                             };
-    
+
                             const updatedRoleUsers = [...updatedGroupedUsers[role]];
                             updatedRoleUsers[userIndex] = updatedUser;
-    
+
                             updatedGroupedUsers[role] = updatedRoleUsers;
                             break;
                         }
                     }
-    
+
                     return updatedGroupedUsers;
                 });
             });
         }
-    
+
         return () => {
             if (socket) {
                 socket.off("updateSidebar");
@@ -102,8 +102,8 @@ const Conversations = () => {
             }
         };
     }, [currentUserId, socket, selectedConversation]);
-    
 
+    // Sort users within their roles based on lastMessageTimestamp
     const sortedGroupedUsers = Object.keys(groupedUsers).reduce((acc, role) => {
         const sortedRoleUsers = [...groupedUsers[role]].sort((a, b) => {
             const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
@@ -120,6 +120,7 @@ const Conversations = () => {
         <div className='py-2 flex flex-col overflow-auto'>
             {roles.map(role => (
                 <div key={role}>
+                    {/* Only display the group name once, even if multiple users from the same group have recent messages */}
                     <div className='font-bold divider text-base text-white'>{role}</div>
                     {sortedGroupedUsers[role].map((user, idx) => (
                         <Conversation

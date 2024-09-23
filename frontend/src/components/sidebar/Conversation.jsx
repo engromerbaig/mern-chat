@@ -22,7 +22,7 @@ const Conversation = ({ conversation, lastIdx, unreadMessages }) => {
 
     return (
         <div
-            className={`flex gap-2 items-center hover:bg-sky-500 rounded p-2 py-1 cursor-pointer
+            className={`conversation-item flex gap-2 items-center hover:bg-sky-500 rounded p-2 py-1 cursor-pointer
             ${isSelected ? "bg-sky-500" : ""}
             ${unreadMessages > 0 && !isSelected ? "bg-[#2B3440] dark:bg-green-100" : ""}
             transition-all duration-300 ease-in-out
