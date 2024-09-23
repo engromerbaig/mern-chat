@@ -31,24 +31,21 @@ io.on("connection", (socket) => {
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
 
-    socket.on("markMessageAsRead", async ({ conversationId, messageId }) => {
+    socket.on("markMessageAsRead", async ({ conversationId }) => {
         try {
-            if (messageId) {
-                // Mark a single message as read
-                await Message.findByIdAndUpdate(messageId, { isRead: true });
-                socket.broadcast.emit("messageRead", { conversationId, messageId });
-            } else {
-                // Mark all messages in the conversation as read
-                await Message.updateMany(
-                    { conversationId, isRead: false },
-                    { $set: { isRead: true } }
-                );
-                socket.broadcast.emit("messageRead", { conversationId });
-            }
+            // Mark all messages in the conversation as read
+            await Message.updateMany(
+                { conversationId, isRead: false },
+                { $set: { isRead: true } }
+            );
+    
+            // Notify all clients (except the current one) that the messages in this conversation are read
+            socket.broadcast.emit("messageRead", { conversationId });
         } catch (error) {
             console.error("Error marking messages as read:", error);
         }
     });
+    
 
     socket.on("newMessage", async ({ senderId, receiverId, message }) => {
         try {
