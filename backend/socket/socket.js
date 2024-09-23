@@ -42,29 +42,35 @@ io.on("connection", (socket) => {
     });
 
     // New event for updating sidebar
-    socket.on("newMessage", ({ senderId, receiverId, message }) => {
-        io.emit("updateSidebar", { senderId, receiverId, message });
+    socket.on("newMessage", async ({ senderId, receiverId, message }) => {
+        // Update unread messages for the receiver
+        await Message.create({ senderId, receiverId, message, isRead: false });
+    
+        io.to([senderId, receiverId]).emit("updateSidebar", { senderId, receiverId, message });
     });
+    
+    socket.on("markMessageAsRead", async ({ conversationId }) => {
+        try {
+            // Mark all messages in the conversation as read
+            await Message.updateMany(
+                { conversationId, isRead: false },
+                { $set: { isRead: true } }
+            );
+    
+            // Notify all clients (except the current one) that the messages in this conversation are read
+            socket.broadcast.emit("messageRead", { conversationId });
+        } catch (error) {
+            console.error("Error marking messages as read:", error);
+        }
+    });
+    
 
     // Existing events for role request status changes
     socket.on("requestStatusChange", (changeType) => {
         io.emit("requestStatusChange", changeType);
     });
 
-	socket.on("markMessageAsRead", async ({ conversationId }) => {
-		try {
-			// Assuming you're marking all messages in the conversation as read
-			await Message.updateMany(
-				{ conversationId, read: false },
-				{ $set: { read: true } }
-			);
-	
-			// Broadcast to all clients that the messages in this conversation are read
-			socket.broadcast.emit("messageRead", { conversationId });
-		} catch (error) {
-			console.error("Error marking messages as read:", error);
-		}
-	});
+
 
 	// Backend Socket Handling
 

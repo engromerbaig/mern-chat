@@ -15,10 +15,10 @@ export const getUsersForSidebar = async (req, res) => {
 
         const currentUserRole = currentUser.role;
 
-        // Fetch only approved users excluding the current user
+        // Fetch approved users excluding the current user
         const approvedUsers = await User.find({
             roleRequestStatus: 'approved',
-            _id: { $ne: currentUserId } // Exclude the current user
+            _id: { $ne: currentUserId }
         });
 
         // Filter users based on chat initiation rules
@@ -30,10 +30,10 @@ export const getUsersForSidebar = async (req, res) => {
         const existingConversations = await Conversation.find({
             participants: currentUserId
         })
-        .populate('participants') // Populate participants to get user details
+        .populate('participants')
         .populate({
             path: 'messages',
-            options: { sort: { createdAt: -1 }, limit: 1 } // Fetch the last message
+            options: { sort: { createdAt: -1 }, limit: 1 }
         }); 
 
         // Extract participants from conversations, excluding the current user
@@ -43,7 +43,8 @@ export const getUsersForSidebar = async (req, res) => {
             );
             return otherParticipants.map(participant => ({
                 ...participant.toObject(),
-                lastMessageTimestamp: conversation.messages[0]?.createdAt || conversation.updatedAt
+                lastMessageTimestamp: conversation.messages[0]?.createdAt || conversation.updatedAt,
+                unreadMessages: conversation.messages.filter(msg => msg.receiverId.toString() === currentUserId.toString() && !msg.isRead).length
             }));
         });
 
@@ -51,7 +52,7 @@ export const getUsersForSidebar = async (req, res) => {
         const uniqueUsersMap = new Map();
 
         // Add filtered users to the map
-        filteredUsers.forEach(user => uniqueUsersMap.set(user._id.toString(), { ...user.toObject(), lastMessageTimestamp: null }));
+        filteredUsers.forEach(user => uniqueUsersMap.set(user._id.toString(), { ...user.toObject(), lastMessageTimestamp: null, unreadMessages: 0 }));
 
         // Add conversation participants to the map (will overwrite duplicates)
         conversationParticipants.forEach(user => uniqueUsersMap.set(user._id.toString(), user));
