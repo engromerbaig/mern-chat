@@ -12,6 +12,31 @@ const Conversations = () => {
     const { _id: currentUserId } = useAuthContext();
     const { selectedConversation } = useConversation();
 
+    const reorderGroupsByMostRecent = (groupedUsers) => {
+        // Flatten all the users into a single array
+        const allUsers = Object.values(groupedUsers).flat();
+    
+        // Sort all users by the latest message timestamp (descending order)
+        allUsers.sort((a, b) => {
+            const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
+            const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
+            return bTimestamp - aTimestamp;
+        });
+    
+        // Rebuild groupedUsers based on the sorted users
+        const newGroupedUsers = {};
+    
+        allUsers.forEach((user) => {
+            if (!newGroupedUsers[user.role]) {
+                newGroupedUsers[user.role] = [];
+            }
+            newGroupedUsers[user.role].push(user);
+        });
+    
+        return newGroupedUsers;
+    };
+    
+
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -36,78 +61,59 @@ const Conversations = () => {
         if (socket) {
             socket.on("updateSidebar", ({ senderId, receiverId, message }) => {
                 const targetUserId = senderId === currentUserId ? receiverId : senderId;
-
+    
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
-
-                    // Loop through roles and update the relevant user
+                    let updatedUser = null;
+    
+                    // Update user within their role
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === targetUserId
                         );
-
+    
                         if (userIndex !== -1) {
-                            const isConversationSelected = selectedConversation && selectedConversation._id === targetUserId;
-
-                            const updatedUser = {
+                            const isConversationSelected =
+                                selectedConversation && selectedConversation._id === targetUserId;
+    
+                            updatedUser = {
                                 ...updatedGroupedUsers[role][userIndex],
                                 lastMessageTimestamp: message.createdAt,
-                                unreadMessages: isConversationSelected 
-                                    ? 0  
+                                unreadMessages: isConversationSelected
+                                    ? 0
                                     : (updatedGroupedUsers[role][userIndex].unreadMessages || 0) + 1,
                             };
-
-                            // Remove user from the list and move to the top of their respective role's list
+    
+                            // Remove the user from the current role group
                             updatedGroupedUsers[role].splice(userIndex, 1);
-                            updatedGroupedUsers[role].unshift(updatedUser);
-
-                            // Re-sort the users within their role based on the latest message
-                            updatedGroupedUsers[role] = updatedGroupedUsers[role].sort((a, b) => {
-                                const aTimestamp = new Date(a.lastMessageTimestamp).getTime();
-                                const bTimestamp = new Date(b.lastMessageTimestamp).getTime();
-                                return bTimestamp - aTimestamp;
-                            });
-
-                            break;
+    
+                            break; // Stop once we've found and updated the user
                         }
                     }
-
-                    return updatedGroupedUsers;
+    
+                    // Add the updated user back to the top of their respective role group
+                    if (updatedUser) {
+                        const userRole = updatedUser.role;
+    
+                        if (!updatedGroupedUsers[userRole]) {
+                            updatedGroupedUsers[userRole] = [];
+                        }
+    
+                        updatedGroupedUsers[userRole].unshift(updatedUser);
+    
+                        // After updating the specific role group, re-sort all role groups based on most recent message
+                        return reorderGroupsByMostRecent(updatedGroupedUsers);
+                    }
+    
+                    return prevGroupedUsers; // Return the previous state if nothing was updated
                 });
             });
-
+    
             socket.on("messageRead", ({ conversationId }) => {
-                setGroupedUsers((prevGroupedUsers) => {
-                    const updatedGroupedUsers = { ...prevGroupedUsers };
-            
-                    // Loop through roles and find the relevant user
-                    for (const role in updatedGroupedUsers) {
-                        const userIndex = updatedGroupedUsers[role].findIndex(
-                            (user) => user._id === conversationId
-                        );
-            
-                        if (userIndex !== -1) {
-                            const updatedUser = {
-                                ...updatedGroupedUsers[role][userIndex],
-                                unreadMessages: 0,  // Reset unread messages to 0
-                            };
-            
-                            updatedGroupedUsers[role][userIndex] = updatedUser;
-            
-                            // Optional: Move user to the top of their role's list if desired
-                            updatedGroupedUsers[role].splice(userIndex, 1);
-                            updatedGroupedUsers[role].unshift(updatedUser);
-            
-                            break;
-                        }
-                    }
-            
-                    return updatedGroupedUsers;
-                });
+                // Handle messageRead event similarly
             });
-            
         }
-
+    
         return () => {
             if (socket) {
                 socket.off("updateSidebar");
@@ -115,6 +121,8 @@ const Conversations = () => {
             }
         };
     }, [currentUserId, socket, selectedConversation]);
+
+        
 
     const roles = Object.keys(groupedUsers);
 
