@@ -42,7 +42,7 @@ const Conversation = ({ conversation, lastIdx, unreadMessages }) => {
                 <div className='flex gap-3 justify-between'>
                     <p className='font-bold text-gray-200'>{conversation.fullName}</p>
                     {unreadMessages > 0 && !isSelected && (
-                        <span className='bg-green-500 text-white text-xs font-bold rounded-full px-2 py-1'>
+                        <span className='bg-green-500 text-green-500 text-xs font-bold rounded-full px-2 py-1'>
                             {unreadMessages}
                         </span>
                     )}
