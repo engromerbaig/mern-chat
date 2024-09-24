@@ -1,12 +1,11 @@
-// backend\middleware\multer.js
 import multer from 'multer';
 
 // Use memory storage so the file is stored as a buffer in memory
-const storage = multer.memoryStorage(); 
+const storage = multer.memoryStorage();
 
 // Define a file filter for allowed file types
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp3|csv|wav/;
+  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp3|wav|webm/; // Added webm for audio recording
   const extname = allowedTypes.test(file.originalname.toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
@@ -22,6 +21,6 @@ const fileFilter = (req, file, cb) => {
 // Multer setup
 export const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
   fileFilter,
 });

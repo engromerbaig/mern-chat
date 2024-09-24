@@ -1,34 +1,79 @@
-import { useState, useRef } from "react";
-import { BsSend } from "react-icons/bs";
-import { FaPaperclip } from "react-icons/fa";  // Import file icon
+import { useState, useRef, useEffect } from "react";
+import { BsSend, BsMicFill, BsMicMuteFill } from "react-icons/bs";
+import { FaPaperclip } from "react-icons/fa";
+import { ReactMic } from 'react-mic'; // Import ReactMic for recording
 import useSendMessage from "../../hooks/useSendMessage";
 
 const MessageInput = () => {
-  const [message, setMessage] = useState("");  // Message state
-  const [file, setFile] = useState(null);      // File state
+  const [message, setMessage] = useState(""); // Message state
+  const [file, setFile] = useState(null); // File state
+  const [isRecording, setIsRecording] = useState(false); // Recording state
+  const [recordedBlob, setRecordedBlob] = useState(null); // Blob for recorded audio
+  const [hasPermission, setHasPermission] = useState(false); // Permission state
   const { loading, sendMessage } = useSendMessage();
 
-  // Create a reference for the hidden file input
+  // Reference for the hidden file input
   const fileInputRef = useRef(null);
+
+  // Request microphone permissions when the component mounts
+  useEffect(() => {
+    // Check for microphone permissions
+    const requestMicrophonePermission = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setHasPermission(true);
+        console.log("Microphone permission granted");
+      } catch (error) {
+        console.error("Microphone permission denied", error);
+        setHasPermission(false);
+      }
+    };
+
+    requestMicrophonePermission();
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!message && !file) return;  // Ensure at least one is present
 
-    await sendMessage(message, file);  // Send message and file
-    setMessage("");                    // Clear message input
-    setFile(null);                     // Clear file input
+    // Ensure either message, file, or recorded audio is provided
+    if (!message && !file && !recordedBlob) {
+      console.log("Nothing to send");
+      return;
+    }
+
+    // Send the recorded audio blob or file
+    await sendMessage(message, file || recordedBlob);
+    setMessage(""); // Clear message input
+    setFile(null); // Clear file input
+    setRecordedBlob(null); // Clear recorded audio
   };
 
   // Handle file selection
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);  // Set selected file in state
+    setFile(e.target.files[0]); // Set selected file in state
   };
 
-  // Trigger the hidden file input when the file icon is clicked
+  // Trigger file input when the file icon is clicked
   const handleFileIconClick = () => {
-    fileInputRef.current.click();  // Programmatically click the hidden file input
+    fileInputRef.current.click(); // Programmatically click the hidden file input
+  };
+
+  // Start recording with mic
+  const startRecording = () => {
+    if (!hasPermission) {
+      alert("Please enable microphone permissions to record audio.");
+      return;
+    }
+    setIsRecording(true);
+    console.log("Recording started");
+  };
+
+  // Stop recording and store the blob for sending
+  const stopRecording = (recordedBlob) => {
+    setIsRecording(false);
+    setRecordedBlob(recordedBlob.blob); // Save recorded audio
+    console.log("Recording stopped, blob saved:", recordedBlob.blob); // Log the blob for debugging
   };
 
   return (
@@ -45,26 +90,47 @@ const MessageInput = () => {
         {/* Hidden File Input */}
         <input
           type="file"
-          ref={fileInputRef}  // Reference to the file input
+          ref={fileInputRef} // Reference to the file input
           className="hidden"
           onChange={handleFileChange}
         />
 
-        {/* Conditionally display file count or paperclip icon */}
+        {/* Display file count or paperclip icon */}
         {file ? (
-          <div className="absolute inset-y-0 right-10 flex items-center">
+          <div className="absolute inset-y-0 right-16 flex items-center">
             <div className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex justify-center items-center">
-              1  {/* Always 1 because only one file is allowed */}
+              1 {/* One file is selected */}
             </div>
           </div>
         ) : (
           <button
             type="button"
-            className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
-            onClick={handleFileIconClick}  // Trigger file input click
+            className="absolute inset-y-0 right-16 flex items-center pr-3 text-white"
+            onClick={handleFileIconClick} // Trigger file input click
           >
             <FaPaperclip size={18} />
           </button>
+        )}
+
+        {/* Mic Button */}
+        <button
+          type="button"
+          className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
+          onClick={isRecording ? () => setIsRecording(false) : startRecording} // Toggle recording
+        >
+          {isRecording ? <BsMicMuteFill size={18} /> : <BsMicFill size={18} />}
+        </button>
+
+        {/* Voice Recorder */}
+        {isRecording && (
+          <ReactMic
+            record={isRecording}
+            className="mic-visualizer" // Add a class for visual feedback (optional)
+            onStop={stopRecording} // When recording stops, capture the audio
+            mimeType="audio/webm" // Specify the MIME type for audio
+            strokeColor="#FF0000" // Visual feedback (optional)
+            backgroundColor="#000000"
+          />
         )}
 
         {/* Send Button */}
@@ -76,6 +142,16 @@ const MessageInput = () => {
           )}
         </button>
       </div>
+
+      {/* Display recording status */}
+      {isRecording && (
+        <p className="text-red-500 text-sm mt-2">Recording in progress...</p>
+      )}
+
+      {/* Display recorded blob (for debugging or user feedback) */}
+      {recordedBlob && (
+        <p className="text-green-500 text-sm mt-2">Audio ready to send</p>
+      )}
     </form>
   );
 };
