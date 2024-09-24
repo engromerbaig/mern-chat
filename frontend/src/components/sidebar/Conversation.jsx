@@ -11,14 +11,18 @@ const Conversation = ({ conversation, lastIdx, unreadMessages }) => {
 
     const handleClick = () => {
         setSelectedConversation(conversation);
-
+    
         // If there are unread messages, mark them as read
         if (unreadMessages > 0) {
             socket.emit('markMessageAsRead', {
                 conversationId: conversation._id,
             });
+    
+            // Optimistically update unread messages in the frontend
+            conversation.unreadMessages = 0;
         }
     };
+    
 
     return (
         <div

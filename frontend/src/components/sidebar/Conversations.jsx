@@ -79,28 +79,33 @@ const Conversations = () => {
             socket.on("messageRead", ({ conversationId }) => {
                 setGroupedUsers((prevGroupedUsers) => {
                     const updatedGroupedUsers = { ...prevGroupedUsers };
-
+            
                     // Loop through roles and find the relevant user
                     for (const role in updatedGroupedUsers) {
                         const userIndex = updatedGroupedUsers[role].findIndex(
                             (user) => user._id === conversationId
                         );
-
+            
                         if (userIndex !== -1) {
                             const updatedUser = {
                                 ...updatedGroupedUsers[role][userIndex],
                                 unreadMessages: 0,  // Reset unread messages to 0
                             };
-
+            
                             updatedGroupedUsers[role][userIndex] = updatedUser;
-
-                            return updatedGroupedUsers;
+            
+                            // Optional: Move user to the top of their role's list if desired
+                            updatedGroupedUsers[role].splice(userIndex, 1);
+                            updatedGroupedUsers[role].unshift(updatedUser);
+            
+                            break;
                         }
                     }
-
-                    return prevGroupedUsers;
+            
+                    return updatedGroupedUsers;
                 });
             });
+            
         }
 
         return () => {

@@ -33,18 +33,20 @@ io.on("connection", (socket) => {
 
     socket.on("markMessageAsRead", async ({ conversationId }) => {
         try {
-            // Mark all messages in the conversation as read
+            // Assuming conversationId is the identifier for the conversation
+            // You need to update messages where the receiverId is the current user and isRead is false
             await Message.updateMany(
-                { conversationId, isRead: false },
+                { receiverId: userId, isRead: false }, // Replace conversationId with the appropriate condition
                 { $set: { isRead: true } }
             );
-    
+        
             // Notify all clients (except the current one) that the messages in this conversation are read
             socket.broadcast.emit("messageRead", { conversationId });
         } catch (error) {
             console.error("Error marking messages as read:", error);
         }
     });
+    
     
 
     socket.on("newMessage", async ({ senderId, receiverId, message }) => {
