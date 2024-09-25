@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { BsSend, BsMicFill, BsStopFill } from "react-icons/bs";
+import { BsSend, BsMicFill, BsStopFill, BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { FaPaperclip } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 import { ReactMic } from 'react-mic';
@@ -10,16 +10,18 @@ const MessageInput = () => {
   const [file, setFile] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const { loading, sendMessage } = useSendMessage();
   const fileInputRef = useRef(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     const requestMicrophonePermission = async () => {
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasPermission(true);
-        console.log("Microphone permission granted");
       } catch (error) {
         console.error("Microphone permission denied", error);
         setHasPermission(false);
@@ -28,6 +30,14 @@ const MessageInput = () => {
 
     requestMicrophonePermission();
   }, []);
+
+  useEffect(() => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [audioBlob]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +56,7 @@ const MessageInput = () => {
     setMessage("");
     setFile(null);
     setAudioBlob(null);
+    setAudioUrl(null);
   };
 
   const handleFileChange = (e) => {
@@ -62,17 +73,27 @@ const MessageInput = () => {
       return;
     }
     setIsRecording(true);
-    console.log("Recording started");
   };
 
   const stopRecording = (recordedBlob) => {
     setIsRecording(false);
     setAudioBlob(recordedBlob.blob);
-    console.log("Recording stopped, blob saved:", recordedBlob.blob);
   };
 
   const cancelAudio = () => {
     setAudioBlob(null);
+    setAudioUrl(null);
+  };
+
+  const toggleAudioPlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
   };
 
   return (
@@ -100,7 +121,7 @@ const MessageInput = () => {
               1
             </div>
           </div>
-        ) : !isRecording && (
+        ) : !isRecording && !audioUrl && (
           <button
             type="button"
             className="absolute inset-y-0 right-16 flex items-center pr-3 text-white"
@@ -111,7 +132,7 @@ const MessageInput = () => {
         )}
 
         {/* Microphone Button */}
-        {!file && !audioBlob && (
+        {!file && !audioUrl && (
           <button
             type="button"
             className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
@@ -121,16 +142,26 @@ const MessageInput = () => {
           </button>
         )}
 
-        {/* Cancel Audio Button */}
-        {audioBlob && (
-          <button
-            type="button"
-            className="absolute inset-y-0 right-10 flex items-center pr-3 text-red-500"
-            onClick={cancelAudio}
-            title="Cancel audio"
-          >
-            <MdCancel size={18} />
-          </button>
+        {/* Audio Preview */}
+        {audioUrl && (
+          <div className="absolute inset-y-0 right-10 flex items-center pr-3">
+            <button
+              type="button"
+              className="text-white mr-2"
+              onClick={toggleAudioPlayback}
+            >
+              {isPlaying ? <BsPauseFill size={18} /> : <BsPlayFill size={18} />}
+            </button>
+            <button
+              type="button"
+              className="text-red-500"
+              onClick={cancelAudio}
+              title="Cancel audio"
+            >
+              <MdCancel size={18} />
+            </button>
+            <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} />
+          </div>
         )}
 
         <ReactMic
@@ -155,9 +186,6 @@ const MessageInput = () => {
       {/* Conditional Messages */}
       {isRecording && (
         <p className="text-red-500 text-sm mt-2">Recording in progress...</p>
-      )}
-      {audioBlob && (
-        <p className="text-green-500 text-sm mt-2">Audio ready to send</p>
       )}
     </form>
   );
