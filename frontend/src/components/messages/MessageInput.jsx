@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { BsSend, BsMicFill, BsMicMuteFill } from "react-icons/bs";
+import { BsSend, BsMicFill, BsStopFill } from "react-icons/bs";
 import { FaPaperclip } from "react-icons/fa";
+import { MdCancel } from "react-icons/md";
 import { ReactMic } from 'react-mic';
 import useSendMessage from "../../hooks/useSendMessage";
 
@@ -38,7 +39,6 @@ const MessageInput = () => {
 
     let fileToSend = file;
     if (audioBlob) {
-      // Create a File object from the audio blob
       fileToSend = new File([audioBlob], "voice_message.webm", { type: "audio/webm" });
     }
 
@@ -71,6 +71,10 @@ const MessageInput = () => {
     console.log("Recording stopped, blob saved:", recordedBlob.blob);
   };
 
+  const cancelAudio = () => {
+    setAudioBlob(null);
+  };
+
   return (
     <form className='px-4 my-3' onSubmit={handleSubmit}>
       <div className='w-full relative flex items-center'>
@@ -89,7 +93,10 @@ const MessageInput = () => {
           onChange={handleFileChange}
         />
 
-        {(file || audioBlob) ? (
+        {/* here file attachment */}
+
+        {(file) ? (
+          
           <div className="absolute inset-y-0 right-16 flex items-center">
             <div className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex justify-center items-center">
               1
@@ -105,13 +112,26 @@ const MessageInput = () => {
           </button>
         )}
 
-        <button
-          type="button"
-          className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
-          onClick={isRecording ? () => setIsRecording(false) : startRecording}
-        >
-          {isRecording ? <BsMicMuteFill size={18} /> : <BsMicFill size={18} />}
-        </button>
+        {!audioBlob && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
+            onClick={isRecording ? stopRecording : startRecording}
+          >
+            {isRecording ? <BsStopFill size={18} /> : <BsMicFill size={18} />}
+          </button>
+        )}
+
+        {audioBlob && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-10 flex items-center pr-3 text-red-500"
+            onClick={cancelAudio}
+            title="Cancel audio"
+          >
+            <MdCancel size={18} />
+          </button>
+        )}
 
         <ReactMic
           record={isRecording}
@@ -134,7 +154,6 @@ const MessageInput = () => {
       {isRecording && (
         <p className="text-red-500 text-sm mt-2">Recording in progress...</p>
       )}
-
       {audioBlob && (
         <p className="text-green-500 text-sm mt-2">Audio ready to send</p>
       )}
