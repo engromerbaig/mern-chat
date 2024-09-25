@@ -1,58 +1,43 @@
-//  frontend\src\components\adminTabs\StatsTab.jsx
+// frontend/src/components/adminTabs/StatsTab.jsx
 import React, { useEffect } from 'react';
-import { useSocketContext } from '../../context/SocketContext';
+import { useAdmin } from '../../hooks/useAdmin'; // Import the useAdmin hook
+import { useSocketContext } from '../../context/SocketContext'; // To get online users
 
 const boxStyle = "py-10 px-6 text-white rounded-lg flex flex-col items-center justify-center space-y-2";
 
-const StatsTab = ({ onTabChange }) => {
-  const { stats, onlineUsers, fetchStats } = useSocketContext();
+const StatsTab = () => {
+  const { stats, fetchStats } = useAdmin(); // Get stats from useAdmin hook
+  const { onlineUsers } = useSocketContext(); // Get online users from SocketContext
 
   useEffect(() => {
-    fetchStats(); // Fetch initial stats on component mount
-
-    return () => {
-      // Optionally clean up listeners if needed
-    };
+    fetchStats(); // Fetch stats when component mounts
   }, [fetchStats]);
 
   return (
     <div className="py-4 px-20">
-      {/* Tabs for different stats */}
+      {/* Display the statistics in boxes */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div
-          className={`${boxStyle} bg-black`}
-        >
+        <div className={`${boxStyle} bg-black`}>
           <p className="text-xl">Total Requests</p>
           <p className="text-3xl font-bold">{stats.totalRequests}</p>
         </div>
-        <div
-          onClick={() => onTabChange('pending')}
-          className={`${boxStyle} bg-yellow-500`}
-        >
+        <div className={`${boxStyle} bg-yellow-500`}>
           <p className="text-xl">Pending Requests</p>
           <p className="text-3xl font-bold">{stats.pendingRequests}</p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <div
-          onClick={() => onTabChange('accepted')}
-          className={`${boxStyle} bg-green-500 `}
-        >
+        <div className={`${boxStyle} bg-green-500`}>
           <p className="text-xl">Accepted Requests</p>
           <p className="text-3xl font-bold">{stats.acceptedRequests}</p>
         </div>
-        <div
-          onClick={() => onTabChange('rejected')}
-          className={`${boxStyle} bg-red-500 `}
-        >
+        <div className={`${boxStyle} bg-red-500`}>
           <p className="text-xl">Rejected Requests</p>
           <p className="text-3xl font-bold">{stats.rejectedRequests}</p>
         </div>
-        <div
-          className={`${boxStyle} bg-gray-500`}
-        >
+        <div className={`${boxStyle} bg-gray-500`}>
           <p className="text-xl">Online Now</p>
-          <p className="text-3xl font-bold">{onlineUsers.length - 1}</p>
+          <p className="text-3xl font-bold">{onlineUsers.length - 1}</p> {/* Minus 1 to exclude the admin */}
         </div>
       </div>
     </div>

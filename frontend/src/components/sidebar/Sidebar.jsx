@@ -6,7 +6,7 @@ const Sidebar = () => {
 
 
 	return (
-		<div className='border-r border-slate-500 p-2 flex flex-col overflow-hidden'>
+		<div className='border-r w-1/4 border-slate-500  flex flex-col overflow-hidden'>
 			
 			<LoggedUser />
 			<SearchInput />

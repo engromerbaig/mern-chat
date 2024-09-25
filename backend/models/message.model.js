@@ -1,4 +1,3 @@
-// backend\models\message.model.js
 import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema(
@@ -24,6 +23,10 @@ const messageSchema = new mongoose.Schema(
     originalFileName: {
       type: String,
       default: null,  // To store the original file name from the user's local system
+    },
+    isRead: { // Track if the message has been read
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

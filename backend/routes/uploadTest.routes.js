@@ -1,6 +1,5 @@
-// backend\routes\uploadTest.routes.js
 import express from 'express';
-import { upload } from '../middleware/multer.js';  // Multer middleware
+import { upload } from '../middleware/multer.js';  // Multer middleware for handling file uploads
 import { uploadOnCloudinary } from '../utils/uploadOnCloudinary.js';  // Cloudinary utility
 
 const router = express.Router();
@@ -8,16 +7,17 @@ const router = express.Router();
 // Route to upload a file via Multer and directly to Cloudinary
 router.post('/test-upload-cloudinary', upload.single('file'), async (req, res) => {
   try {
-    // Check if file is provided
+    // Check if the file is provided
     if (!req.file) {
+      console.error('No file provided');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Access the file buffer
-    const fileBuffer = req.file.buffer;
+    // Log file details for debugging
+    console.log('File received:', req.file.originalname, req.file.mimetype);
 
     // Upload the file to Cloudinary
-    const cloudinaryUrl = await uploadOnCloudinary(fileBuffer);
+    const cloudinaryUrl = await uploadOnCloudinary(req.file.buffer); // Use the file buffer
 
     // Return success response with Cloudinary URL
     res.status(200).json({
@@ -25,7 +25,7 @@ router.post('/test-upload-cloudinary', upload.single('file'), async (req, res) =
       cloudinaryUrl,
     });
   } catch (error) {
-    console.error("Cloudinary upload failed:", error.message);
+    console.error('Error during Cloudinary upload:', error.message);
     res.status(500).json({ error: 'Failed to upload file to Cloudinary' });
   }
 });

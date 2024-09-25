@@ -1,31 +1,23 @@
-// backend\utils\uploadOnCloudinary.js
-import { v2 as cloudinary } from 'cloudinary';
-import dotenv from "dotenv";
+import cloudinary from 'cloudinary';
 
-dotenv.config();
-
-// Cloudinary configuration
-cloudinary.config({
+// Configure Cloudinary
+cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadOnCloudinary = (buffer) => {
+// Function to upload file buffer to Cloudinary
+export const uploadOnCloudinary = async (fileBuffer) => {
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'auto',  // Automatically determine file type (image, video, etc.)
-      },
+    cloudinary.v2.uploader.upload_stream(
+      { resource_type: 'auto' }, // Auto-detect the type (audio, image, video, etc.)
       (error, result) => {
-        if (result) {
-          resolve(result.secure_url);  // Return the Cloudinary URL on success
-        } else {
-          reject(error);  // Reject with error message
+        if (error) {
+          return reject(error); // Reject promise if there is an error
         }
+        resolve(result.secure_url); // Return Cloudinary URL if successful
       }
-    );
-
-    stream.end(buffer);  // Send the buffer to Cloudinary
+    ).end(fileBuffer); // Pass the file buffer to the upload stream
   });
 };

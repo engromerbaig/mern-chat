@@ -25,7 +25,7 @@ const MessageContainer = ({ showSidebar }) => {
 	}
 
 	return (
-		<div className='w-full md:w-[450px] flex flex-col h-full'>
+		<div className='w-full  flex flex-col h-full'>
 			{!selectedConversation ? (
 				<NoChatSelected />
 			) : (

@@ -2,30 +2,42 @@
 import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import axios from 'axios';
 import LogoutButton from '../../components/sidebar/LogoutButton';
-import { useSocketContext } from '../../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
+import { useAdmin } from '../../hooks/useAdmin'; // Import the new hook
 
+// Lazy-load the tab components
 const StatsTab = lazy(() => import('../../components/adminTabs/StatsTab'));
 const PendingRequestsTab = lazy(() => import('../../components/adminTabs/PendingRequestsTab'));
 const AcceptedRequestsTab = lazy(() => import('../../components/adminTabs/AcceptedRequestsTab'));
 const RejectedRequestsTab = lazy(() => import('../../components/adminTabs/RejectedRequestsTab'));
 
 const AdminDashboard = () => {
-  const { pendingRequests, fetchPendingRequests } = useSocketContext();
+  const { pendingRequests, fetchPendingRequests } = useAdmin(); // Fetch data using useAdmin hook
   const [acceptedRequests, setAcceptedRequests] = useState([]);
   const [rejectedRequests, setRejectedRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('stats');
+  const [activeTab, setActiveTab] = useState('stats'); // State to control active tab
   const navigate = useNavigate();
 
+  // Fetch request history for accepted and rejected requests
+  const fetchRequestHistory = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/admin/request-history');
+      const data = response.data;
+      setAcceptedRequests(data.approvedRequests || []);
+      setRejectedRequests(data.rejectedRequests || []);
+    } catch (error) {
+      console.error('Error fetching request history:', error);
+      setError('Failed to fetch request history');
+    }
+  }, []);
+
+  // Initial data fetching for pending, accepted, and rejected requests
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        await Promise.all([
-          fetchPendingRequests(),
-          fetchRequestHistory(),
-        ]);
+        await Promise.all([fetchPendingRequests(), fetchRequestHistory()]);
         setLoading(false);
       } catch (err) {
         setError('Failed to load requests');
@@ -34,37 +46,25 @@ const AdminDashboard = () => {
     };
 
     fetchRequests();
-  }, [fetchPendingRequests]);
+  }, [fetchPendingRequests, fetchRequestHistory]);
 
-  const fetchRequestHistory = useCallback(async () => {
-    try {
-      const response = await axios.get('/api/admin/request-history');
-      const data = response.data;
-      setAcceptedRequests(data.approvedRequests);
-      setRejectedRequests(data.rejectedRequests);
-    } catch (error) {
-      console.error('Error fetching request history:', error);
-      setError('Failed to fetch request history');
-    }
-  }, []); // Memoizing fetchRequestHistory
-
+  // Handle approval of pending requests
   const handleApprove = useCallback(async (userId) => {
     try {
       await axios.post(`/api/admin/approve-role/${userId}`);
       await fetchPendingRequests();
       await fetchRequestHistory();
-      setError(null); // Clear error if successful
     } catch (err) {
       setError('Failed to approve role request');
     }
   }, [fetchPendingRequests, fetchRequestHistory]);
 
+  // Handle rejection of pending requests
   const handleReject = useCallback(async (userId) => {
     try {
       await axios.post(`/api/admin/reject-role/${userId}`);
       await fetchPendingRequests();
       await fetchRequestHistory();
-      setError(null); // Clear error if successful
     } catch (err) {
       setError('Failed to reject role request');
     }
@@ -80,10 +80,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="h-screen w-full bg-black flex flex-col">
+      {/* Main content section */}
       <div className="flex-grow overflow-auto bg-white p-6 m-4 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Super Admin Dashboard</h1>
 
-        {/* Tabs */}
+        {/* Tab navigation buttons */}
         <div className="flex justify-center gap-4 mb-6">
           {['stats', 'pending', 'accepted', 'rejected'].map((tab) => (
             <button
@@ -96,24 +97,22 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Tab Content */}
-        <div>
-          <Suspense fallback={<div className="text-center text-gray-600">Loading...</div>}>
-            {activeTab === 'stats' && <StatsTab />}
-            {activeTab === 'pending' && (
-              <PendingRequestsTab
-                pendingRequests={pendingRequests}
-                handleApprove={handleApprove}
-                handleReject={handleReject}
-              />
-            )}
-            {activeTab === 'accepted' && <AcceptedRequestsTab acceptedRequests={acceptedRequests} />}
-            {activeTab === 'rejected' && <RejectedRequestsTab rejectedRequests={rejectedRequests} />}
-          </Suspense>
-        </div>
+        {/* Tab content using Suspense to lazy load the components */}
+        <Suspense fallback={<div className="text-center text-gray-600">Loading...</div>}>
+          {activeTab === 'stats' && <StatsTab />} {/* Stats Tab */}
+          {activeTab === 'pending' && (
+            <PendingRequestsTab
+              pendingRequests={pendingRequests}
+              handleApprove={handleApprove}
+              handleReject={handleReject}
+            />
+          )}
+          {activeTab === 'accepted' && <AcceptedRequestsTab acceptedRequests={acceptedRequests} />}
+          {activeTab === 'rejected' && <RejectedRequestsTab rejectedRequests={rejectedRequests} />}
+        </Suspense>
       </div>
 
-      {/* Bottom section */}
+      {/* Bottom section with logout button */}
       <div className="h-10 p-12 bg-black flex justify-between items-center px-6">
         <LogoutButton />
         <button
