@@ -93,16 +93,14 @@ const MessageInput = () => {
           onChange={handleFileChange}
         />
 
-        {/* here file attachment */}
-
-        {(file) ? (
-          
+        {/* File Attachment */}
+        {file ? (
           <div className="absolute inset-y-0 right-16 flex items-center">
             <div className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex justify-center items-center">
               1
             </div>
           </div>
-        ) : (
+        ) : !isRecording && (
           <button
             type="button"
             className="absolute inset-y-0 right-16 flex items-center pr-3 text-white"
@@ -112,7 +110,8 @@ const MessageInput = () => {
           </button>
         )}
 
-        {!audioBlob && (
+        {/* Microphone Button */}
+        {!file && !audioBlob && (
           <button
             type="button"
             className="absolute inset-y-0 right-10 flex items-center pr-3 text-white"
@@ -122,6 +121,7 @@ const MessageInput = () => {
           </button>
         )}
 
+        {/* Cancel Audio Button */}
         {audioBlob && (
           <button
             type="button"
@@ -142,6 +142,7 @@ const MessageInput = () => {
           backgroundColor="#000000"
         />
 
+        {/* Send Button */}
         <button type='submit' className='absolute inset-y-0 right-0 flex items-center pr-3'>
           {loading ? (
             <div className='loading loading-spinner'></div>
@@ -151,6 +152,7 @@ const MessageInput = () => {
         </button>
       </div>
 
+      {/* Conditional Messages */}
       {isRecording && (
         <p className="text-red-500 text-sm mt-2">Recording in progress...</p>
       )}
