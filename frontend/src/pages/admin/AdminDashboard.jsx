@@ -87,12 +87,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="h-screen w-full bg-black flex flex-col">
-      <div className="flex-grow overflow-hidden bg-white p-6 m-4 rounded-lg shadow-lg">
+      <div className="flex-grow flex flex-col overflow-hidden bg-white p-4 m-4 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Super Admin Dashboard</h1>
 
-        <div className="flex flex-col sm:flex-row h-full">
+        <div className="flex-grow flex flex-col sm:flex-row overflow-hidden">
           {/* Tab navigation buttons */}
-          <div className="sm:w-1/3 mb-4 sm:mb-0 sm:pr-4">
+          <div className="sm:w-1/3 mb-4 sm:mb-0 sm:pr-4 flex-shrink-0">
             <div className="flex sm:flex-col justify-center sm:justify-start gap-2 sm:gap-4">
               {['stats', 'pending', 'accepted', 'rejected'].map((tab) => (
                 <button
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Tab content */}
-          <div className="sm:w-2/3 overflow-auto">
+          <div className="sm:w-2/3 overflow-auto flex-grow">
             <Suspense fallback={<div className="text-center text-gray-600">Loading...</div>}>
               {tabContent[activeTab]}
             </Suspense>
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Bottom section with logout button */}
-      <div className="h-10 p-12 bg-black flex justify-between items-center px-6">
+      <div className="h-16 bg-black flex justify-between items-center px-6">
         <LogoutButton />
         <button
           onClick={() => navigate('/')}
