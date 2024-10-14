@@ -12,7 +12,7 @@ const AcceptedRequestsTab = ({ acceptedRequests }) => {
       {sortedAcceptedRequests.length === 0 ? (
         <p className="text-gray-600 text-center">No accepted requests.</p>
       ) : (
-        <ul className="grid grid-cols-3 gap-4">
+        <ul className="grid md:grid-cols-3 gap-4">
           {sortedAcceptedRequests.map((request) => (
             <li key={request._id} className="bg-gray-100 p-6 rounded-lg shadow-sm">
               <p className="text-xl mb-3 text-gray-800">

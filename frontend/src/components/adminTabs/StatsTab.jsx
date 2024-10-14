@@ -14,9 +14,9 @@ const StatsTab = () => {
   }, [fetchStats]);
 
   return (
-    <div className="py-4 px-20">
+    <div className="py-4 md:px-20">
       {/* Display the statistics in boxes */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div className={`${boxStyle} bg-black`}>
           <p className="text-xl">Total Requests</p>
           <p className="text-3xl font-bold">{stats.totalRequests}</p>
@@ -26,7 +26,7 @@ const StatsTab = () => {
           <p className="text-3xl font-bold">{stats.pendingRequests}</p>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         <div className={`${boxStyle} bg-green-500`}>
           <p className="text-xl">Accepted Requests</p>
           <p className="text-3xl font-bold">{stats.acceptedRequests}</p>
