@@ -14,7 +14,7 @@ const StatsTab = () => {
   }, [fetchStats]);
 
   return (
-    <div className="py-4 md:px-20">
+    <div className="py-4 px-4 md:px-20">
       {/* Display the statistics in boxes */}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div className={`${boxStyle} bg-black`}>
