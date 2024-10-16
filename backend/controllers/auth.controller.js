@@ -1,7 +1,5 @@
 
-import User from '../models/user.model.js';
 import generateTokenAndSetCookie from '../utils/generateToken.js';
-import jwt from 'jsonwebtoken';
 
 // Updated login controller with handshake token validation
 export const login = async (req, res) => {
@@ -56,7 +54,8 @@ export const logout = (req, res) => {
     // Redirect the user to the login page after logout
     res.status(200).redirect("https://portai.voxaccess.net/login");
   } catch (error) {
-    console.log("Error in logout controller", error.message);
+    console.log("Error in logout controller:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
